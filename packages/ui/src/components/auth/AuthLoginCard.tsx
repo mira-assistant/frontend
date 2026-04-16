@@ -118,7 +118,8 @@ export default function AuthLoginCard({ onAuthenticated, webOAuthNextPath = '/ap
       return;
     }
 
-    window.location.href = buildWebGoogleOAuthLoginUrl(webOAuthNextPath);
+    const spaOrigin = typeof window !== 'undefined' ? window.location.origin : undefined;
+    window.location.href = buildWebGoogleOAuthLoginUrl(webOAuthNextPath, spaOrigin);
   };
 
   return (

@@ -8,9 +8,6 @@ import {
   useReducedMotion,
 } from 'framer-motion';
 
-const DESKTOP_APP_URL =
-  import.meta.env.VITE_DESKTOP_APP_URL || 'https://github.com/mira-assistant/desktop-app/releases';
-
 function FloatingAppMockup() {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
@@ -135,7 +132,7 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
-              href={DESKTOP_APP_URL}
+              href={"https://github.com/mira-assistant/frontend/releases"}
               className="rounded-full border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:px-4 sm:text-sm"
             >
               Get the app
@@ -201,7 +198,7 @@ export default function LandingPage() {
                   <i className="fas fa-arrow-right text-xs opacity-80" aria-hidden />
                 </Link>
                 <a
-                  href={DESKTOP_APP_URL}
+                  href={"https://github.com/mira-assistant/frontend/releases"}
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-7 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
                 >
                   <i className="fab fa-apple text-lg" aria-hidden />
@@ -366,12 +363,10 @@ export default function LandingPage() {
                 <p className="mt-4 text-lg text-slate-600">
                   The desktop app adds secure token storage, OAuth sign-in, and webhook bridges for power
                   users. By default, the &quot;Get the app&quot; buttons open the latest desktop release page.
-                  Set <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">VITE_DESKTOP_APP_URL</code>{' '}
-                  to override this destination.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <a
-                    href={DESKTOP_APP_URL}
+                    href={"https://github.com/mira-assistant/frontend/releases"}
                     className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     <i className="fas fa-download" aria-hidden />
@@ -453,7 +448,7 @@ export default function LandingPage() {
             <a href="#features" className="hover:text-slate-900">
               Features
             </a>
-            <a href={DESKTOP_APP_URL} className="hover:text-slate-900">
+            <a href={"https://github.com/mira-assistant/frontend/releases"} className="hover:text-slate-900">
               Get the app
             </a>
           </div>

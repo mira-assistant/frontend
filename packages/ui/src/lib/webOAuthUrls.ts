@@ -9,10 +9,14 @@ function apiOriginPrefix(): string {
 
 /**
  * Full URL to start Google OAuth in the browser (server redirect).
- * Backend should redirect back to `/auth/callback` with tokens or errors in the query string.
+ * Backend redirects to `/auth/callback` on the SPA with tokens or errors in the query string.
+ * Pass `spaOrigin` (e.g. `window.location.origin`) so the API can return there without a fixed WEB_APP_ORIGIN env.
  */
-export function buildWebGoogleOAuthLoginUrl(nextPath: string = '/app'): string {
+export function buildWebGoogleOAuthLoginUrl(nextPath: string = '/app', spaOrigin?: string): string {
   const u = new URL(`${apiOriginPrefix()}${ENDPOINTS.AUTH_GOOGLE_WEB_LOGIN}`);
   u.searchParams.set('next', nextPath);
+  if (spaOrigin) {
+    u.searchParams.set('spa_origin', spaOrigin);
+  }
   return u.toString();
 }
