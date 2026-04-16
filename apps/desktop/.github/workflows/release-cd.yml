@@ -1,0 +1,117 @@
+name: Release CD
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+# Organization secret (reusable across repos, e.g. website + desktop):
+#   MIRA_API_URL — production API origin, e.g. https://api.example.com (no /api/v1 suffix)
+# Configure under: Organization Settings → Secrets and variables → Actions → Secrets.
+# Grant this repository access to the org secret if required.
+# Shipped app uses BETA=false (v1 API) via .env.production written in CI.
+
+concurrency:
+  group: release-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Write .env.production for packaged app
+        env:
+          MIRA_API_URL: ${{ secrets.MIRA_API_URL }}
+        shell: bash
+        run: |
+          if [ -z "$MIRA_API_URL" ]; then
+            echo "Missing organization secret MIRA_API_URL (or this repo cannot read it)"
+            exit 1
+          fi
+          printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > .env.production
+
+      - name: Rebuild native modules for Electron (keytar)
+        run: npx --yes @electron/rebuild -f -w keytar
+
+      - name: Package installers (Windows)
+        if: matrix.platform == 'windows'
+        run: npm run package
+
+      - name: Package installers (macOS)
+        if: matrix.platform == 'macos'
+        env:
+          # Skip Apple code signing in CI (no certs on the runner)
+          CSC_IDENTITY_AUTO: "-"
+        run: npm run package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}
+          path: release/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from package.json
+        id: pkg
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-windows
+          path: assets/windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-macos
+          path: assets/macos
+
+      # electron-builder writes builder-debug.yml on each OS; both match *.yml and
+      # GitHub release assets require unique names — remove before upload.
+      - name: Drop per-OS debug yml (not used by electron-updater)
+        run: find assets -name builder-debug.yml -delete
+
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.pkg.outputs.tag }}
+          name: Mira App ${{ steps.pkg.outputs.tag }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          # Clear release files first so re-runs / updates never hit
+          # "ReleaseAsset ... already_exists" (replacesArtifacts alone is flaky).
+          removeArtifacts: true
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          # File globs only — release/ also contains win-unpacked/, mac-*/ etc. which ncipollo cannot upload.
+          # Include yml + blockmap for electron-updater.
+          artifacts: assets/windows/*.exe,assets/windows/*.yml,assets/windows/*.blockmap,assets/macos/*.dmg,assets/macos/*.yml,assets/macos/*.blockmap
+          token: ${{ secrets.GITHUB_TOKEN }}

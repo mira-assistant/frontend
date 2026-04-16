@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+
+    // Output settings
+    "outDir": "../dist",
+    "rootDir": "../",      // CHANGED: Must be the project root to include 'shared'
+    "baseUrl": "../",      // ADDED: Needed for paths to resolve correctly from root
+    "noEmit": false,
+
+    // Path Aliases
+    "paths": {
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": [
+    "./**/*",             // Includes everything in main/
+    "../shared/**/*"      // Includes everything in shared/
+  ],
+  "exclude": ["node_modules"]
+}

@@ -1,0 +1,54 @@
+# .gitignore for Electron/React Monorepo
+
+# Node dependencies
+node_modules/
+
+# Build outputs
+dist/
+release/
+
+# Log files
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment variable files (per-app and root)
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.*.local
+packages/*/.env
+packages/*/.env.local
+packages/*/.env.*.local
+
+# TypeScript build info
+*.tsbuildinfo
+apps/*/*.tsbuildinfo
+packages/*/*.tsbuildinfo
+
+# VSCode settings (optional, remove if you want to keep .vscode in repo)
+.vscode/
+
+# OS-specific files
+*.swp
+
+# Ignore package locks at subdirectory level (if using workspaces with root lock only)
+apps/*/package-lock.json
+packages/*/package-lock.json
+# If using yarn, uncomment the following
+# yarn.lock
+# apps/*/yarn.lock
+# packages/*/yarn.lock
+
+# Electron specific outputs
+out/
+*.asar
+
+# Test/coverage files
+coverage/
+apps/*/coverage/
+packages/*/coverage/

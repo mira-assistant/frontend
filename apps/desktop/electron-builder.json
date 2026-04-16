@@ -1,0 +1,30 @@
+{
+  "appId": "com.mira.app",
+  "productName": "Mira Assistant",
+  "copyright": "Copyright © 2026 Ankur Desai",
+  "artifactName": "Mira-Assistant-${version}-${os}-${arch}.${ext}",
+  "files": [
+    "dist/**/*",
+    "renderer/dist/**/*",
+    "package.json",
+    ".env.production"
+  ],
+  "directories": {
+    "buildResources": "resources",
+    "output": "release"
+  },
+  "asar": true,
+  "publish": {
+    "provider": "github",
+    "owner": "mira-assistant",
+    "repo": "mira-frontend"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "resources/icon.png"
+  },
+  "mac": {
+    "target": "dmg",
+    "icon": "resources/icon.png"
+  }
+}

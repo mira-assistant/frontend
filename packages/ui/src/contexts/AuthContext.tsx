@@ -1,0 +1,247 @@
+
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
+import { api } from '@mira/ui/shared/api/client';
+import { authApi } from '@mira/ui/lib/api/auth';
+import { webTokenStore } from '@mira/ui/lib/webTokenStore';
+import { AuthTokens, LoginCredentials, RegisterData } from '@mira/ui/types/auth.types';
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+  saveTokens: (newTokens: AuthTokens) => Promise<void>;
+  getAccessToken: () => Promise<string | null>;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+async function readStoredTokens(): Promise<AuthTokens | null> {
+  if (window.electronAPI) {
+    const result = await window.electronAPI.getTokens();
+    if (result.success && result.tokens?.accessToken && result.tokens?.refreshToken) {
+      return {
+        accessToken: result.tokens.accessToken,
+        refreshToken: result.tokens.refreshToken,
+      };
+    }
+    return null;
+  }
+  return webTokenStore.get();
+}
+
+async function persistTokens(accessToken: string, refreshToken: string): Promise<void> {
+  if (window.electronAPI) {
+    const result = await window.electronAPI.storeTokens(accessToken, refreshToken);
+    if (!result.success) {
+      throw new Error('Failed to securely store tokens');
+    }
+  } else {
+    webTokenStore.set(accessToken, refreshToken);
+  }
+}
+
+async function clearAllStoredTokens(): Promise<void> {
+  if (window.electronAPI) {
+    await window.electronAPI.clearTokens();
+  } else {
+    webTokenStore.clear();
+  }
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [tokens, setTokens] = useState<AuthTokens | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const tokensRef = useRef<AuthTokens | null>(null);
+  tokensRef.current = tokens;
+
+  // Setup axios interceptors once; read tokens from tokensRef so Authorization is never stale.
+  useEffect(() => {
+    const requestIntercept = api.interceptors.request.use(
+      (config) => {
+        const t = tokensRef.current;
+        if (t?.accessToken) {
+          config.headers.Authorization = `Bearer ${t.accessToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const responseIntercept = api.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        const originalRequest = error.config;
+        const t = tokensRef.current;
+
+        // If 401 and we haven't retried, try to refresh token
+        if (error.response?.status === 401 && !originalRequest._retry && t?.refreshToken) {
+          originalRequest._retry = true;
+
+          try {
+            // Use authApi to refresh
+            const refreshResponse = await authApi.refresh(t.refreshToken);
+
+            const newTokens: AuthTokens = {
+              accessToken: refreshResponse.access_token,
+              refreshToken: refreshResponse.refresh_token || t.refreshToken,
+            };
+
+            await persistTokens(newTokens.accessToken, newTokens.refreshToken);
+
+            setTokens(newTokens);
+            setIsAuthenticated(true);
+
+            // Retry original request with new token
+            originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+            return api(originalRequest);
+          } catch (_refreshError) {
+            // Refresh failed, clear everything
+            console.error('Token refresh failed, logging out');
+
+            await clearAllStoredTokens();
+
+            // Clear state
+            setTokens(null);
+            setIsAuthenticated(false);
+
+            return Promise.reject(_refreshError);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.request.eject(requestIntercept);
+      api.interceptors.response.eject(responseIntercept);
+    };
+  }, []);
+
+  // Initialize auth state on mount - verify tokens with refresh
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const stored = await readStoredTokens();
+
+        if (stored?.accessToken && stored.refreshToken) {
+          try {
+            const refreshResponse = await authApi.refresh(stored.refreshToken);
+
+            const newTokens: AuthTokens = {
+              accessToken: refreshResponse.access_token,
+              refreshToken: refreshResponse.refresh_token || stored.refreshToken,
+            };
+
+            await persistTokens(newTokens.accessToken, newTokens.refreshToken);
+
+            setTokens(newTokens);
+            setIsAuthenticated(true);
+
+            console.log('Authentication verified');
+          } catch (_refreshError) {
+            console.error('Token verification failed, clearing tokens');
+            await clearAllStoredTokens();
+            setTokens(null);
+            setIsAuthenticated(false);
+          }
+        } else {
+          console.log('No stored tokens found');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+  }, []);
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    try {
+      const response = await authApi.login(credentials);
+
+      const newTokens: AuthTokens = {
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      };
+
+      await persistTokens(newTokens.accessToken, newTokens.refreshToken);
+
+      setTokens(newTokens);
+      setIsAuthenticated(true);
+
+      console.log('Logged in successfully');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(error.response?.data?.detail || error.message || 'Login failed');
+    }
+  }, []);
+
+  const register = useCallback(async (data: RegisterData) => {
+    try {
+      const response = await authApi.register(data);
+
+      const newTokens: AuthTokens = {
+        accessToken: response.access_token,
+        refreshToken: response.refresh_token,
+      };
+
+      await persistTokens(newTokens.accessToken, newTokens.refreshToken);
+
+      setTokens(newTokens);
+      setIsAuthenticated(true);
+
+      console.log('Registered successfully');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      throw new Error(error.response?.data?.detail || error.message || 'Registration failed');
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await clearAllStoredTokens();
+
+      setTokens(null);
+      setIsAuthenticated(false);
+
+      console.log('Logged out successfully');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  }, []);
+
+  const saveTokens = useCallback(async (newTokens: AuthTokens) => {
+    await persistTokens(newTokens.accessToken, newTokens.refreshToken);
+    setTokens(newTokens);
+    setIsAuthenticated(true);
+  }, []);
+
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    return tokens?.accessToken ?? null;
+  }, [tokens?.accessToken]);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        login,
+        register,
+        logout,
+        saveTokens,
+        getAccessToken,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}

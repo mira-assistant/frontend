@@ -1,0 +1,17 @@
+{
+  "name": "mira-frontend",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "concurrently -n \"WEB,DESK\" -c \"cyan,magenta\" \"npm run dev:website\" \"npm run dev:desktop\"",
+    "dev:website": "npm run dev --workspace=apps/website",
+    "dev:desktop": "npm run dev --workspace=apps/desktop",
+    "build:website": "npm run build --workspace=apps/website",
+    "build:desktop": "npm run build --workspace=apps/desktop",
+    "build:ui": "npm run build --workspace=@mira/ui",
+    "package:desktop": "npm run package --workspace=apps/desktop"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

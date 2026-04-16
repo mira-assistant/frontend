@@ -1,0 +1,41 @@
+{
+  "name": "mira-website",
+  "version": "1.1.0",
+  "author": {
+    "name": "Ankur Desai",
+    "email": "ardusa05@gmail.com",
+    "url": "https://ardusa.dev/"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "rimraf dist && vite build",
+    "preview": "vite preview",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@mira/ui": "*",
+    "framer-motion": "^12.23.24",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.9.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5.1.1",
+    "eslint": "^9",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "rimraf": "^6.1.2",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "typescript-eslint": "^8.46.4",
+    "vite": "^7.2.2"
+  }
+}

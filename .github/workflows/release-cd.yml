@@ -1,0 +1,114 @@
+name: Desktop CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/ui/**'
+      - 'package-lock.json'
+      - 'package.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Write .env.production
+        env:
+          MIRA_API_URL: ${{ secrets.MIRA_API_URL }}
+        shell: bash
+        run: |
+          if [ -z "$MIRA_API_URL" ]; then
+            echo "Missing MIRA_API_URL"
+            exit 1
+          fi
+          printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > apps/desktop/.env.production
+
+      - name: Rebuild native modules (keytar)
+        working-directory: apps/desktop
+        run: npx --yes @electron/rebuild -f -w keytar
+
+      - name: Package (Windows)
+        if: matrix.platform == 'windows'
+        working-directory: apps/desktop
+        run: npm run package
+
+      - name: Package (macOS)
+        if: matrix.platform == 'macos'
+        working-directory: apps/desktop
+        env:
+          CSC_IDENTITY_AUTO: '-'
+        run: npm run package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}
+          path: apps/desktop/release/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: pkg
+        run: |
+          VERSION=$(jq -r .version apps/desktop/package.json)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-windows
+          path: assets/windows
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-macos
+          path: assets/macos
+
+      - name: Drop per-OS debug yml
+        run: find assets -name builder-debug.yml -delete
+
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.pkg.outputs.tag }}
+          name: Mira App ${{ steps.pkg.outputs.tag }}
+          commit: ${{ github.sha }}
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
+          artifactErrorsFailBuild: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          artifacts: assets/windows/*.exe,assets/windows/*.yml,assets/windows/*.blockmap,assets/macos/*.dmg,assets/macos/*.yml,assets/macos/*.blockmap
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,25 @@
+{
+  "name": "@mira/ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ricky0123/vad-react": "^0.0.36",
+    "axios": "^1.13.2",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.24",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.9.5",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5",
+    "vite": "^7.2.2"
+  }
+}
