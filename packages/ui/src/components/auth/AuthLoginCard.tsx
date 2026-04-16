@@ -2,11 +2,13 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@mira/ui/hooks/useAuth';
 import { authApi } from '@mira/ui/lib/api/auth';
-import { buildWebGitHubOAuthLoginUrl, buildWebGoogleOAuthLoginUrl } from '@mira/ui/lib/webOAuthUrls';
+import { buildWebGoogleOAuthLoginUrl } from '@mira/ui/lib/webOAuthUrls';
 
 const veilEase = [0.22, 1, 0.36, 1] as const;
 
-const browserOAuthEnabled = process.env.VITE_ENABLE_BROWSER_OAUTH === 'true';
+const browserOAuthEnabled =
+  import.meta.env.VITE_ENABLE_BROWSER_OAUTH === 'true' ||
+  process.env.VITE_ENABLE_BROWSER_OAUTH === 'true';
 
 const glassInput =
   'w-full rounded-xl border border-slate-200/90 bg-white/55 px-3.5 py-2.5 text-sm text-slate-900 shadow-inner shadow-slate-900/5 placeholder:text-slate-400 backdrop-blur-md transition-[border-color,background-color,box-shadow,opacity] duration-200 focus:border-[#00cc6a]/55 focus:bg-white/75 focus:outline-none focus:ring-2 focus:ring-[#00ff88]/30 disabled:cursor-not-allowed disabled:opacity-40';
@@ -14,9 +16,11 @@ const glassInput =
 type AuthLoginCardProps = {
   /** Called after email/password or OAuth sign-in succeeds (tokens saved). */
   onAuthenticated?: () => void;
+  /** Post-OAuth in-app path (browser flow); must stay same-origin on the web app. */
+  webOAuthNextPath?: string;
 };
 
-export default function AuthLoginCard({ onAuthenticated }: AuthLoginCardProps) {
+export default function AuthLoginCard({ onAuthenticated, webOAuthNextPath = '/app' }: AuthLoginCardProps) {
   const { login, register, saveTokens } = useAuth();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [error, setError] = useState('');
@@ -123,42 +127,10 @@ export default function AuthLoginCard({ onAuthenticated }: AuthLoginCardProps) {
       return;
     }
 
-    window.location.href = buildWebGoogleOAuthLoginUrl('/app');
+    window.location.href = buildWebGoogleOAuthLoginUrl(webOAuthNextPath);
   };
 
-  const handleGitHubLogin = async () => {
-    setError('');
-    if (window.electronAPI) {
-      setLoading(true);
-      try {
-        const result = await window.electronAPI.loginWithGitHub();
-        if (!result.success || !result.code) {
-          throw new Error(result.error || 'GitHub OAuth failed');
-        }
-        const response = await authApi.gitHubExchange(result.code);
-        await window.electronAPI.storeTokens(response.access_token, response.refresh_token);
-        await saveTokens({
-          accessToken: response.access_token,
-          refreshToken: response.refresh_token,
-        });
-        onAuthenticated?.();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'GitHub login failed');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    if (!browserOAuthEnabled) {
-      setError('GitHub sign-in is not enabled for the web app yet.');
-      return;
-    }
-
-    window.location.href = buildWebGitHubOAuthLoginUrl('/app');
-  };
-
-  const showOAuthRow = isLoginMode && (!!window.electronAPI || browserOAuthEnabled);
+  const showOAuthRow = !!window.electronAPI || browserOAuthEnabled;
 
   return (
     <motion.div
@@ -408,16 +380,6 @@ export default function AuthLoginCard({ onAuthenticated }: AuthLoginCardProps) {
                   />
                 </svg>
                 {loading ? 'Connecting…' : 'Google'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleGitHubLogin}
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-700/25 bg-slate-800/85 px-4 py-2.5 text-sm font-medium text-white shadow-md backdrop-blur-md transition-[background-color,border-color,box-shadow] hover:border-slate-600/40 hover:bg-slate-800 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <i className="fab fa-github text-lg" aria-hidden />
-                {loading ? 'Connecting…' : 'GitHub'}
               </button>
             </div>
           </>

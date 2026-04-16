@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss';
 
+/** Theme only: Tailwind v4 scans via `@source` in `src/globals.css`, not this `content` array. */
 const config: Config = {
   content: [
     './index.html',

@@ -10,7 +10,8 @@ export default defineConfig(({ mode }) => {
 
   const apiUrl = env.MIRA_API_URL || 'http://localhost:8000';
   const beta = env.BETA || '';
-  const browserOAuth = env.VITE_ENABLE_BROWSER_OAUTH || 'false';
+  // Default on for the website so Google sign-in is visible without a local .env tweak; set VITE_ENABLE_BROWSER_OAUTH=false to hide.
+  const browserOAuth = env.VITE_ENABLE_BROWSER_OAUTH === 'false' ? 'false' : 'true';
 
   return {
     plugins: [react()],

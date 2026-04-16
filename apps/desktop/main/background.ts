@@ -9,14 +9,14 @@ import {
 import { api } from '../shared/api/client';
 import { ENDPOINTS } from '../shared/api/constants';
 import { TokenStorage } from './auth/token-storage';
-import { handleGoogleOAuth, handleGitHubOAuth } from './auth/oauth-handler';
+import { handleGoogleOAuth } from './auth/oauth-handler';
 
 const isDev = process.env.NODE_ENV === 'development';
 
 /** Dev: local Vite dev server for the desktop renderer (port must match renderer/vite.config.ts). */
 const RENDERER_DEV_PORT = process.env.MIRA_RENDERER_DEV_PORT || '59247';
 const RENDERER_DEV_URL =
-  process.env.MIRA_RENDERER_DEV_URL || `http://127.0.0.1:${RENDERER_DEV_PORT}`;
+  process.env.MIRA_RENDERER_DEV_URL || `http://localhost:${RENDERER_DEV_PORT}`;
 
 let mainWindow: BrowserWindow | null = null;
 let currentClientName: string | null = null;
@@ -120,16 +120,6 @@ ipcMain.handle('auth:google-oauth', async () => {
     return { success: true, data: result };
   } catch (error: any) {
     console.error('[IPC] Google OAuth error:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('auth:github-oauth', async () => {
-  try {
-    const code = await handleGitHubOAuth();
-    return { success: true, code };
-  } catch (error: any) {
-    console.error('[IPC] GitHub OAuth error:', error);
     return { success: false, error: error.message };
   }
 });

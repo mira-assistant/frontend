@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Tailwind v4: register sources (config `content` is not used by @tailwindcss/postcss). */
+@source "..";
+@source "../../../packages/ui/src";
+
 :root {
   --accent-color: #00cc6a;
 }

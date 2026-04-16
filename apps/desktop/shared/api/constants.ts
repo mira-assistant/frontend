@@ -20,8 +20,6 @@ export const ENDPOINTS = {
   AUTH_REFRESH: '/auth/refresh',
   AUTH_GOOGLE_URL: '/auth/google/url',
   AUTH_GOOGLE_CALLBACK: '/auth/google/callback',
-  AUTH_GITHUB_URL: '/auth/github/url',
-  AUTH_GITHUB_EXCHANGE: '/auth/github/exchange',
 
   // Service
   SERVICE_CLIENTS: '/service/clients',

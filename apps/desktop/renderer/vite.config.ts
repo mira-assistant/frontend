@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => {
     server: {
       port: rendererDevPort,
       strictPort: true,
+      // Match wait-on / Electron dev URL (localhost) so HEAD/GET checks are reliable.
+      host: '127.0.0.1',
     },
   };
 });

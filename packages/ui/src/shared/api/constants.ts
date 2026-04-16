@@ -22,9 +22,6 @@ export const ENDPOINTS = {
   AUTH_GOOGLE_CALLBACK: '/auth/google/callback',
   /** Browser redirect flow (backend must implement). */
   AUTH_GOOGLE_WEB_LOGIN: '/auth/google/web/login',
-  AUTH_GITHUB_URL: '/auth/github/url',
-  AUTH_GITHUB_EXCHANGE: '/auth/github/exchange',
-  AUTH_GITHUB_WEB_LOGIN: '/auth/github/web/login',
 
   // Service
   SERVICE_CLIENTS: '/service/clients',

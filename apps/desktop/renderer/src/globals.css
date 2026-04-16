@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+@source "..";
+@source "../../../../packages/ui/src";
+
 :root {
   --accent-color: #00cc6a;
 }

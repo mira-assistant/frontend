@@ -16,9 +16,3 @@ export function buildWebGoogleOAuthLoginUrl(nextPath: string = '/app'): string {
   u.searchParams.set('next', nextPath);
   return u.toString();
 }
-
-export function buildWebGitHubOAuthLoginUrl(nextPath: string = '/app'): string {
-  const u = new URL(`${apiOriginPrefix()}${ENDPOINTS.AUTH_GITHUB_WEB_LOGIN}`);
-  u.searchParams.set('next', nextPath);
-  return u.toString();
-}

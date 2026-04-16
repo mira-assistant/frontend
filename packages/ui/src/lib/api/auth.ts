@@ -60,30 +60,4 @@ export const authApi = {
     });
     return data;
   },
-
-  /**
-   * Get GitHub OAuth URL
-   * GET /api/v2/auth/github/url
-   */
-  getGitHubOAuthUrl: async (redirectPort: number = 4280): Promise<{ url: string; state: string }> => {
-    const { data } = await api.get<{ url: string; state: string }>(ENDPOINTS.AUTH_GITHUB_URL, {
-      params: { redirect_port: redirectPort },
-    });
-    return data;
-  },
-
-  /**
-   * Exchange GitHub OAuth code for tokens
-   * POST /api/v2/auth/github/exchange
-   */
-  gitHubExchange: async (
-    code: string,
-    redirectPort: number = 4280
-  ): Promise<AuthResponse> => {
-    const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH_GITHUB_EXCHANGE, {
-      code,
-      redirect_port: redirectPort,
-    });
-    return data;
-  },
 };
