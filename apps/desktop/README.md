@@ -37,5 +37,5 @@ What makes it hard:
 
 ## Minimal Development Notes
 
-- Environment keys: `MIRA_API_URL`, `BETA` (see `.env.example`).
+- Environment keys: `MIRA_API_URL`, `BETA` (copy `frontend/.env.example` to `frontend/.env`).
 - Common commands: `npm install`, `npm run dev`, `npm run build`, `npm run package`.

@@ -1,4 +1,5 @@
 {
+  "electronVersion": "39.8.8",
   "appId": "com.mira.app",
   "productName": "Mira Assistant",
   "copyright": "Copyright © 2026 Ankur Desai",

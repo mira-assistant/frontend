@@ -4,23 +4,22 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+/** Monorepo frontend root (`frontend/.env` lives here). */
+const frontendRoot = path.resolve(__dirname, '../..');
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, __dirname, '');
+  const env = loadEnv(mode, frontendRoot, '');
 
   const apiUrl = env.MIRA_API_URL || 'http://localhost:8000';
   const beta = env.BETA || '';
-  // Default on for the website so Google sign-in is visible without a local .env tweak; set VITE_ENABLE_BROWSER_OAUTH=false to hide.
-  const browserOAuth = env.VITE_ENABLE_BROWSER_OAUTH === 'false' ? 'false' : 'true';
 
   return {
     plugins: [react()],
-    envDir: __dirname,
+    envDir: frontendRoot,
     base: '/',
     define: {
       'process.env.MIRA_API_URL': JSON.stringify(apiUrl),
       'process.env.BETA': JSON.stringify(beta),
-      'process.env.VITE_ENABLE_BROWSER_OAUTH': JSON.stringify(browserOAuth),
     },
     resolve: {
       alias: {

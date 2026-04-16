@@ -8,6 +8,7 @@ const waitOn = require('wait-on');
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const desktopRoot = path.resolve(__dirname, '..');
+const frontendRoot = path.resolve(desktopRoot, '..', '..');
 
 function loadEnvFile(filePath, { override } = { override: false }) {
   if (!fs.existsSync(filePath)) return;
@@ -31,8 +32,8 @@ function loadEnvFile(filePath, { override } = { override: false }) {
   }
 }
 
-loadEnvFile(path.join(desktopRoot, '.env'), { override: false });
-loadEnvFile(path.join(desktopRoot, '.env.local'), { override: true });
+loadEnvFile(path.join(frontendRoot, '.env'), { override: false });
+loadEnvFile(path.join(frontendRoot, '.env.local'), { override: true });
 
 const port = process.env.MIRA_RENDERER_DEV_PORT || '59247';
 const mainJs = path.join(desktopRoot, 'dist/main/background.js');
