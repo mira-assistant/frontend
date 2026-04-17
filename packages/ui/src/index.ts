@@ -1,10 +1,11 @@
-export { default as AppPage } from './pages/AppPage';
+export { default as AssistantLayout } from './pages/AssistantLayout';
 export { default as LoginPage } from './pages/LoginPage';
 
 export { AuthProvider, AuthContext } from './contexts/AuthContext';
 export { ServiceProvider, ServiceContext } from './contexts/ServiceContext';
 export { AudioProvider, AudioContext } from './contexts/AudioContext';
 export { ToastProvider, useToast } from './contexts/ToastContext';
+export { NotificationProvider, useNotification } from './contexts/NotificationContext';
 
 export { useAuth } from './hooks/useAuth';
 export { useService } from './hooks/useService';

@@ -94,7 +94,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [isVADReady, setIsVADReady] = useState(false);
 
   // VAD/ONNX assets live in `/public` and must resolve from the app origin,
-  // not the current client route (e.g. `/app`).
+  // not the current client route (e.g. `/assistant`).
   function getAssetPath() {
     return new URL(import.meta.env.BASE_URL, window.location.origin).href;
   }

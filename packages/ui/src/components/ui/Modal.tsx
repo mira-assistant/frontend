@@ -15,24 +15,21 @@ interface ModalProps {
 const variantTokens = {
   danger: {
     icon: 'fa-exclamation-triangle',
-    iconWrap:
-      'border-rose-200/80 bg-linear-to-br from-rose-100/90 to-rose-50/70 text-rose-600 shadow-inner shadow-white/40',
+    iconWrap: 'border-rose-500/30 bg-rose-950/50 text-rose-300',
     confirmClass:
-      'border border-rose-300/60 bg-linear-to-b from-rose-500/95 to-rose-600/95 text-white shadow-[0_8px_32px_rgba(225,29,72,0.25)] backdrop-blur-md hover:brightness-110',
+      'border border-rose-500/45 bg-rose-600/90 text-white hover:bg-rose-600 focus-visible:ring-rose-400/40',
   },
   warning: {
     icon: 'fa-exclamation-circle',
-    iconWrap:
-      'border-amber-200/80 bg-linear-to-br from-amber-100/90 to-amber-50/70 text-amber-700 shadow-inner shadow-white/40',
+    iconWrap: 'border-amber-500/30 bg-amber-950/50 text-amber-200',
     confirmClass:
-      'border border-amber-300/60 bg-linear-to-b from-amber-500/95 to-amber-600/95 text-white shadow-[0_8px_32px_rgba(217,119,6,0.2)] backdrop-blur-md hover:brightness-110',
+      'border border-amber-500/45 bg-amber-600/90 text-white hover:bg-amber-600 focus-visible:ring-amber-400/40',
   },
   info: {
     icon: 'fa-info-circle',
-    iconWrap:
-      'border-sky-200/80 bg-linear-to-br from-sky-100/90 to-sky-50/70 text-sky-700 shadow-inner shadow-white/40',
+    iconWrap: 'border-sky-500/30 bg-sky-950/50 text-sky-200',
     confirmClass:
-      'border border-sky-300/60 bg-linear-to-b from-sky-500/95 to-sky-600/95 text-white shadow-[0_8px_32px_rgba(2,132,199,0.2)] backdrop-blur-md hover:brightness-110',
+      'border border-sky-500/45 bg-sky-600/90 text-white hover:bg-sky-600 focus-visible:ring-sky-400/40',
   },
 };
 
@@ -69,7 +66,7 @@ export default function Modal({
       {isOpen ? (
         <motion.div
           key="modal-root"
-          className="fixed inset-0 z-220 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[220] flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -78,7 +75,7 @@ export default function Modal({
           <div
             role="presentation"
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/15 backdrop-blur-2xl backdrop-saturate-150"
+            className="absolute inset-0 bg-zinc-950/60 backdrop-blur-md"
             aria-hidden
           />
 
@@ -92,14 +89,9 @@ export default function Modal({
                 ? { duration: 0.16, ease: veilEase }
                 : { type: 'spring', damping: 34, stiffness: 360, mass: 0.82 }
             }
-            onClick={e => e.stopPropagation()}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/70 bg-white/45 p-7 shadow-[0_24px_80px_rgba(15,23,42,0.12),0_0_0_1px_rgba(255,255,255,0.5)_inset] ring-1 ring-[#00ff88]/15 backdrop-blur-2xl"
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/95 p-7 shadow-[0_24px_80px_rgba(0,0,0,0.5)] ring-1 ring-emerald-500/10 backdrop-blur-xl"
           >
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl bg-linear-to-b from-white/55 via-white/20 to-emerald-400/10"
-              aria-hidden
-            />
-
             <div className="relative">
               <div
                 className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border backdrop-blur-md ${styles.iconWrap}`}
@@ -107,15 +99,15 @@ export default function Modal({
                 <i className={`fas ${styles.icon} text-xl`} aria-hidden />
               </div>
 
-              <h3 className="mb-2 text-xl font-semibold tracking-tight text-slate-800">{title}</h3>
+              <h3 className="mb-2 text-xl font-semibold tracking-tight text-zinc-50">{title}</h3>
 
-              <p className="mb-7 text-sm leading-relaxed text-slate-600">{message}</p>
+              <p className="mb-7 text-sm leading-relaxed text-zinc-400">{message}</p>
 
               <div className="flex items-stretch gap-3">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 rounded-xl border border-white/80 bg-white/55 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur-md transition-[background-color,border-color,box-shadow] hover:border-slate-200/90 hover:bg-white/75"
+                  className="flex-1 rounded-xl border border-white/10 bg-zinc-950/60 px-4 py-2.5 text-sm font-semibold text-zinc-200 transition-colors hover:bg-zinc-800/80"
                 >
                   {cancelText}
                 </button>
@@ -125,7 +117,7 @@ export default function Modal({
                     onConfirm();
                     onClose();
                   }}
-                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-[filter,box-shadow] ${styles.confirmClass}`}
+                  className={`flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold transition-[filter,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 ${styles.confirmClass}`}
                 >
                   {confirmText}
                 </button>

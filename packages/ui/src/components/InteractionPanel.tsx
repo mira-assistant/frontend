@@ -437,14 +437,14 @@ export default function InteractionPanel() {
 
   return (
     <>
-      <div className="flex flex-col h-full bg-linear-to-br from-white to-[#f0fffa] rounded-none overflow-hidden border-l border-[#80ffdb]">
+      <div className="flex h-full flex-col overflow-hidden rounded-none bg-zinc-950/30">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-6 border-b border-[#80ffdb] bg-linear-to-r from-[#f0fffa] to-white">
-          <h2 className="text-xl font-semibold text-[#1f2937]">Interactions</h2>
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-zinc-950/40 px-6 py-6 backdrop-blur-sm">
+          <h2 className="text-xl font-semibold text-zinc-100">Interactions</h2>
           <button
             onClick={handleClearAll}
             disabled={conversationGroups.length === 0 || loading}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-[#00cc6a] bg-[#f0fffa] border border-[#80ffdb] rounded-lg transition-all duration-200 hover:bg-[#e6fffa] hover:text-[#00b359] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-4 py-2 text-sm font-medium text-emerald-300/95 transition-all duration-200 hover:border-emerald-500/45 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <i className="fas fa-trash" />
             Clear All
@@ -452,16 +452,16 @@ export default function InteractionPanel() {
         </div>
 
         {/* Interaction List */}
-        <div ref={containerRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-3">
+        <div ref={containerRef} className="flex-1 space-y-3 overflow-y-auto overscroll-none px-6 py-6">
           {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <i className="fas fa-spinner fa-spin text-3xl text-[#00cc6a]" />
+            <div className="flex h-full items-center justify-center">
+              <i className="fas fa-spinner fa-spin text-3xl text-emerald-400/80" />
             </div>
           ) : displayGroups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <i className="fas fa-robot text-5xl text-[#9ca3af] opacity-50 mb-4" />
-              <p className="text-lg font-medium text-[#9ca3af] mb-2">No conversations yet</p>
-              <small className="text-sm text-[#9ca3af] opacity-80">
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <i className="fas fa-robot mb-4 text-5xl text-zinc-600 opacity-50" />
+              <p className="mb-2 text-lg font-medium text-zinc-500">No conversations yet</p>
+              <small className="text-sm text-zinc-600 opacity-90">
                 Start speaking to interact with your AI assistant
               </small>
             </div>
@@ -478,12 +478,12 @@ export default function InteractionPanel() {
                       toggleConversation(groupIndex);
                     }
                   }}
-                  className="w-full min-w-0 max-w-full cursor-pointer overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-[#00ff88] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff88]/35 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f0fffa]"
+                  className="group/conv w-full min-w-0 max-w-full cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50 shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                 >
-                  <div className="flex w-full min-w-0 items-center gap-3 border-b border-[#e5e7eb] bg-linear-to-r from-[#f9fafb] to-white p-4">
-                    <div className="group/header flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <div className="flex w-full min-w-0 items-center gap-3 border-b border-white/[0.08] bg-zinc-900/60 p-4">
+                    <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
                       <span
-                        className="flex h-5 w-5 shrink-0 items-center justify-center text-[#6b7280] transition-colors group-hover/header:text-[#00cc6a]"
+                        className="flex h-5 w-5 shrink-0 items-center justify-center text-zinc-500 transition-colors group-hover/conv:text-emerald-400/90"
                         aria-hidden
                       >
                         <i
@@ -493,20 +493,20 @@ export default function InteractionPanel() {
 
                       {group.isActive ? (
                         <span
-                          className="inline-block h-2 w-2 shrink-0 rounded-full bg-[#00ff88] animate-pulse"
+                          className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-400"
                           aria-hidden
                         />
                       ) : null}
 
                       <div className="min-w-0 flex-1 overflow-hidden py-0.5">
-                        <h3 className="text-sm font-semibold text-[#1f2937]">
+                        <h3 className="text-sm font-semibold text-zinc-100">
                           <span className="block truncate" title={getConversationTitle(group)}>
                             {getConversationTitle(group)}
                           </span>
                         </h3>
                         {group.isActive && group.conversation?.topic_summary ? (
                           <p
-                            className="mt-0.5 truncate text-xs text-[#9ca3af]"
+                            className="mt-0.5 truncate text-xs text-zinc-500"
                             title={group.conversation.topic_summary}
                           >
                             {group.conversation.topic_summary}
@@ -514,7 +514,7 @@ export default function InteractionPanel() {
                         ) : null}
                         {group.conversation?.context_summary ? (
                           <p
-                            className="mt-0.5 truncate text-xs text-[#9ca3af]"
+                            className="mt-0.5 truncate text-xs text-zinc-500"
                             title={group.conversation.context_summary}
                           >
                             {group.conversation.context_summary}
@@ -522,7 +522,7 @@ export default function InteractionPanel() {
                         ) : null}
                       </div>
 
-                      <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-xs text-[#9ca3af] sm:flex-row sm:items-center sm:gap-4">
+                      <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-xs text-zinc-500 sm:flex-row sm:items-center sm:gap-4">
                         <span className="flex items-center gap-1 whitespace-nowrap tabular-nums">
                           <i className="fas fa-comment text-[11px] opacity-80" aria-hidden />
                           {group.interactions.length}
@@ -542,7 +542,7 @@ export default function InteractionPanel() {
                           e.stopPropagation();
                           setDeleteConversationModal(group.conversation!.id);
                         }}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-red-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-rose-400/90 transition-colors hover:bg-rose-950/50 hover:text-rose-300"
                         title="Delete conversation"
                       >
                         <i className="fas fa-trash text-xs" aria-hidden />
@@ -556,7 +556,7 @@ export default function InteractionPanel() {
                     onClick={e => e.stopPropagation()}
                   >
                     <div className="min-h-0 overflow-hidden" inert={!group.isExpanded}>
-                      <div className="w-full min-w-0 space-y-2 bg-[#fafbfc] p-4">
+                      <div className="w-full min-w-0 space-y-2 bg-zinc-950/50 p-4">
                         {group.interactions.map(interaction => {
                           const person = getPersonDisplay(interaction.person_id);
                           const colors = getPersonColor(person.index);
@@ -564,7 +564,7 @@ export default function InteractionPanel() {
                           return (
                             <div
                               key={interaction.id}
-                              className="group/interaction overflow-hidden rounded-lg border border-[#e5e7eb] bg-white transition-[border-color,box-shadow] duration-200 hover:border-[#80ffdb] hover:shadow-sm"
+                              className="group/interaction overflow-hidden rounded-lg border border-white/10 bg-zinc-900/70 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm"
                             >
                               <div className="flex items-center gap-3 p-3">
                                 <div
@@ -582,11 +582,11 @@ export default function InteractionPanel() {
                                     >
                                       {person.label}
                                     </span>
-                                    <span className="text-[10px] tabular-nums text-[#9ca3af]">
+                                    <span className="text-[10px] tabular-nums text-zinc-500">
                                       {formatLocalTime(interaction.timestamp)}
                                     </span>
                                   </div>
-                                  <p className="text-sm leading-relaxed text-[#1f2937]">
+                                  <p className="text-sm leading-relaxed text-zinc-200">
                                     {interaction.text}
                                   </p>
                                 </div>
@@ -597,7 +597,7 @@ export default function InteractionPanel() {
                                     e.stopPropagation();
                                     setDeleteInteractionModal(interaction.id);
                                   }}
-                                  className="flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-md text-red-400 opacity-0 transition-[opacity,background-color,color] duration-200 group-hover/interaction:opacity-100 hover:bg-red-50 hover:text-red-600"
+                                  className="flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-md text-rose-400/90 opacity-0 transition-[opacity,background-color,color] duration-200 group-hover/interaction:opacity-100 hover:bg-rose-950/50 hover:text-rose-300"
                                   title="Delete interaction"
                                 >
                                   <i className="fas fa-trash text-xs" aria-hidden />

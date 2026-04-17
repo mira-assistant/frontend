@@ -1,5 +1,5 @@
 import { api } from '@dadei/ui/shared/api/client';
-import { LoginCredentials, RegisterData, AuthResponse } from '../../types/auth.types';
+import { LoginCredentials, RegisterData, AuthResponse, UserMe } from '../../types/auth.types';
 import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 
 export const authApi = {
@@ -59,5 +59,14 @@ export const authApi = {
       state,
     });
     return data;
+  },
+
+  me: async (): Promise<UserMe> => {
+    const { data } = await api.get<UserMe>(ENDPOINTS.AUTH_ME);
+    return data;
+  },
+
+  deleteMe: async (): Promise<void> => {
+    await api.delete(ENDPOINTS.AUTH_ME);
   },
 };

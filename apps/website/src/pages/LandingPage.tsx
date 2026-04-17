@@ -138,7 +138,7 @@ export default function LandingPage() {
               Get the app
             </a>
             <Link
-              to="/app"
+              to="/assistant"
               className="rounded-full bg-linear-to-r from-[#00e070] to-[#00b359] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(0,204,106,0.35)] transition hover:brightness-110 sm:px-5 sm:text-sm"
             >
               Open web app
@@ -191,7 +191,7 @@ export default function LandingPage() {
                 className="mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
-                  to="/app"
+                  to="/assistant"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-7 py-3.5 text-sm font-semibold text-white shadow-xl transition hover:bg-slate-800"
                 >
                   Start in browser
@@ -373,7 +373,7 @@ export default function LandingPage() {
                     Get the app
                   </a>
                   <Link
-                    to="/app"
+                    to="/assistant"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                   >
                     Continue in browser
@@ -442,7 +442,7 @@ export default function LandingPage() {
             <span className="text-sm text-slate-500">© {new Date().getFullYear()}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-            <Link to="/app" className="hover:text-slate-900">
+            <Link to="/assistant" className="hover:text-slate-900">
               Web app
             </Link>
             <a href="#features" className="hover:text-slate-900">
