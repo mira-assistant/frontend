@@ -10,10 +10,10 @@ const appRoot = path.resolve(__dirname, '../..');
 const envDir = existsSync(path.join(frontendRoot, '.env')) ? frontendRoot : appRoot;
 dotenv.config({ path: path.join(envDir, '.env') });
 
+// Load every present file so desktop-specific values can override monorepo root (renderer/Vite uses root only).
 const prodCandidates = [path.join(frontendRoot, '.env.production'), path.join(appRoot, '.env.production')];
 for (const p of prodCandidates) {
   if (existsSync(p)) {
     dotenv.config({ path: p, override: true });
-    break;
   }
 }

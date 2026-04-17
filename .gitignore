@@ -16,6 +16,7 @@ Thumbs.db
 
 # Environment variable files (per-app and root)
 .env
+.env.production
 .env.local
 .env.*.local
 apps/*/.env

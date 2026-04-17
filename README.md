@@ -52,6 +52,8 @@ Create `frontend/.env` at the monorepo root (both apps read it) with at least:
 - `MIRA_API_URL` — backend base URL (defaults to `http://localhost:8000` if omitted)
 - `BETA` — optional; `true` when exercising beta API routing where applicable
 
+Production builds (`vite build` for the website or desktop renderer) read **`MIRA_API_URL` from the monorepo root** via `loadEnv` (`.env.production` or environment variables such as on Vercel). The desktop installer workflow writes that root `.env.production` before packaging so the renderer bundle matches the API the Electron main process uses.
+
 Common commands from the repo root:
 
 ```bash

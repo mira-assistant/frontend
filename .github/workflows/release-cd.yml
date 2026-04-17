@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Write .env.production
+      - name: Write .env.production (Vite + Electron)
         env:
           MIRA_API_URL: ${{ secrets.MIRA_API_URL }}
         shell: bash
@@ -50,6 +50,7 @@ jobs:
             echo "Missing MIRA_API_URL"
             exit 1
           fi
+          printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > .env.production
           printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > apps/desktop/.env.production
 
       - name: Rebuild native modules (keytar)
