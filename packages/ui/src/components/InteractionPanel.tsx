@@ -1,13 +1,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Interaction, Person, Conversation } from '@mira/ui/types/models.types';
-import { personsApi } from '@mira/ui/lib/api/persons';
-import { interactionsApi } from '@mira/ui/lib/api/interactions';
-import { conversationsApi } from '@mira/ui/lib/api/conversations';
-import { useService } from '@mira/ui/hooks/useService';
-import { useToast } from '@mira/ui/contexts/ToastContext';
-import Modal from '@mira/ui/components/ui/Modal';
-import { subscribeRealtimeMessages } from '@mira/ui/lib/realtimeClient';
+import { Interaction, Person, Conversation } from '@dadei/ui/types/models.types';
+import { personsApi } from '@dadei/ui/lib/api/persons';
+import { interactionsApi } from '@dadei/ui/lib/api/interactions';
+import { conversationsApi } from '@dadei/ui/lib/api/conversations';
+import { useService } from '@dadei/ui/hooks/useService';
+import { useToast } from '@dadei/ui/contexts/ToastContext';
+import Modal from '@dadei/ui/components/ui/Modal';
+import { subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 
 const ORPHAN_KEY = '__orphan__';
 

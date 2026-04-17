@@ -1,9 +1,9 @@
 
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { api } from '@mira/ui/shared/api/client';
-import { authApi } from '@mira/ui/lib/api/auth';
-import { webTokenStore } from '@mira/ui/lib/webTokenStore';
-import { AuthTokens, LoginCredentials, RegisterData } from '@mira/ui/types/auth.types';
+import { api } from '@dadei/ui/shared/api/client';
+import { authApi } from '@dadei/ui/lib/api/auth';
+import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
+import { AuthTokens, LoginCredentials, RegisterData } from '@dadei/ui/types/auth.types';
 
 interface AuthContextType {
   isAuthenticated: boolean;

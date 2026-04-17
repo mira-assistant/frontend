@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@mira/ui/hooks/useAuth';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
 
 /**
  * Handles redirect return from server-side web OAuth.

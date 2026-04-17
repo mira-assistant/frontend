@@ -1,10 +1,10 @@
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from '@mira/ui/contexts/ToastContext';
-import { AuthProvider } from '@mira/ui/contexts/AuthContext';
-import { ServiceProvider } from '@mira/ui/contexts/ServiceContext';
-import { AudioProvider } from '@mira/ui/contexts/AudioContext';
-import MiraAppPage from '@mira/ui/pages/MiraAppPage';
-import LoginPage from '@mira/ui/pages/LoginPage';
+import { ToastProvider } from '@dadei/ui/contexts/ToastContext';
+import { AuthProvider } from '@dadei/ui/contexts/AuthContext';
+import { ServiceProvider } from '@dadei/ui/contexts/ServiceContext';
+import { AudioProvider } from '@dadei/ui/contexts/AudioContext';
+import AppPage from '@dadei/ui/pages/AppPage';
+import LoginPage from '@dadei/ui/pages/LoginPage';
 
 export function App() {
   return (
@@ -18,7 +18,7 @@ export function App() {
               element={
                 <ServiceProvider>
                   <AudioProvider>
-                    <MiraAppPage />
+                    <AppPage />
                   </AudioProvider>
                 </ServiceProvider>
               }

@@ -1,4 +1,4 @@
-export { default as MiraAppPage } from './pages/MiraAppPage';
+export { default as AppPage } from './pages/AppPage';
 export { default as LoginPage } from './pages/LoginPage';
 
 export { AuthProvider, AuthContext } from './contexts/AuthContext';

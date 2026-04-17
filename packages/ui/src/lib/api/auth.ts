@@ -1,6 +1,6 @@
-import { api } from '@mira/ui/shared/api/client';
+import { api } from '@dadei/ui/shared/api/client';
 import { LoginCredentials, RegisterData, AuthResponse } from '../../types/auth.types';
-import { ENDPOINTS } from '@mira/ui/shared/api/constants';
+import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 
 export const authApi = {
   /**

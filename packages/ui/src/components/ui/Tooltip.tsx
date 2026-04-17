@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@mira/ui/lib/cn';
+import { cn } from '@dadei/ui/lib/cn';
 
 interface TooltipProps {
   content: string;

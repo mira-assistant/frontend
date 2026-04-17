@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { ActionWebhookPayload } from '@mira/ui/types/electron';
-import { subscribeRealtimeMessages } from '@mira/ui/lib/realtimeClient';
+import type { ActionWebhookPayload } from '@dadei/ui/types/electron';
+import { subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 
 const AUTO_DISMISS_MS = 14_000;
 const MAX_STACK = 4;

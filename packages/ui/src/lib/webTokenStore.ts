@@ -1,5 +1,5 @@
-const ACCESS_KEY = 'mira_web_access_token';
-const REFRESH_KEY = 'mira_web_refresh_token';
+const ACCESS_KEY = 'dadei_web_access_token';
+const REFRESH_KEY = 'dadei_web_refresh_token';
 
 export const webTokenStore = {
   get(): { accessToken: string; refreshToken: string } | null {

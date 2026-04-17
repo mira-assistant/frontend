@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { AudioContext } from '@mira/ui/contexts/AudioContext';
+import { AudioContext } from '@dadei/ui/contexts/AudioContext';
 
 export function useAudio() {
   const context = useContext(AudioContext);

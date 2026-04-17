@@ -1,8 +1,8 @@
 
 import { createContext, useEffect, useState } from 'react';
 import { useMicVAD } from '@ricky0123/vad-react';
-import { interactionsApi } from '@mira/ui/lib/api/interactions';
-import { useService } from '@mira/ui/hooks/useService';
+import { interactionsApi } from '@dadei/ui/lib/api/interactions';
+import { useService } from '@dadei/ui/hooks/useService';
 
 interface AudioContextType {
   isProcessing: boolean;

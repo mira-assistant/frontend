@@ -1,8 +1,8 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useService } from '@mira/ui/hooks/useService';
-import { cn } from '@mira/ui/lib/cn';
+import { useService } from '@dadei/ui/hooks/useService';
+import { cn } from '@dadei/ui/lib/cn';
 
 interface MicrophoneButtonProps {
   disableSpaceToggle?: boolean;
@@ -172,7 +172,7 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
         <kbd className="px-4 py-1 bg-white border border-[#e5e7eb] rounded-md shadow-sm font-mono text-base">
           Space
         </kbd>
-        <span>to toggle Mira</span>
+        <span>to toggle Dadei</span>
       </motion.div>
     </div>
   );

@@ -3,7 +3,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as keytar from 'keytar';
 
-const SERVICE_NAME = 'mira-desktop';
+const SERVICE_NAME = 'dadei-desktop';
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const CLIENT_NAME_KEY = 'client_name';

@@ -1,6 +1,6 @@
 
 import { useContext } from 'react';
-import { AuthContext } from '@mira/ui/contexts/AuthContext';
+import { AuthContext } from '@dadei/ui/contexts/AuthContext';
 
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -10,7 +10,7 @@ const frontendRoot = path.resolve(__dirname, '../..');
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, frontendRoot, '');
 
-  const apiUrl = env.MIRA_API_URL || 'http://localhost:8000';
+  const apiUrl = env.API_URL || 'http://localhost:8000';
   const beta = env.BETA || '';
 
   return {
@@ -18,13 +18,13 @@ export default defineConfig(({ mode }) => {
     envDir: frontendRoot,
     base: '/',
     define: {
-      'process.env.MIRA_API_URL': JSON.stringify(apiUrl),
+      'process.env.API_URL': JSON.stringify(apiUrl),
       'process.env.BETA': JSON.stringify(beta),
     },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        '@mira/ui': path.resolve(__dirname, '../../packages/ui/src'),
+        '@dadei/ui': path.resolve(__dirname, '../../packages/ui/src'),
       },
     },
     build: {

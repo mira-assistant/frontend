@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import AuthLoginBackdrop from '@mira/ui/components/auth/AuthLoginBackdrop';
-import AuthLoginCard from '@mira/ui/components/auth/AuthLoginCard';
-import { useAuth } from '@mira/ui/hooks/useAuth';
+import AuthLoginBackdrop from '@dadei/ui/components/auth/AuthLoginBackdrop';
+import AuthLoginCard from '@dadei/ui/components/auth/AuthLoginCard';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
 
 function isSafeInternalPath(path: string): boolean {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) return false;

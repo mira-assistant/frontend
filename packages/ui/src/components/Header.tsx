@@ -1,13 +1,13 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@mira/ui/hooks/useAuth';
-import { useService } from '@mira/ui/hooks/useService';
-import { serviceApi } from '@mira/ui/lib/api/service';
-import Tooltip from '@mira/ui/components/ui/Tooltip';
-import PeoplePanel from '@mira/ui/components/PeoplePanel';
-import { cn } from '@mira/ui/lib/cn';
-import { setStoredClientName } from '@mira/ui/lib/clientNameStorage';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useService } from '@dadei/ui/hooks/useService';
+import { serviceApi } from '@dadei/ui/lib/api/service';
+import Tooltip from '@dadei/ui/components/ui/Tooltip';
+import PeoplePanel from '@dadei/ui/components/PeoplePanel';
+import { cn } from '@dadei/ui/lib/cn';
+import { setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 
 interface HeaderProps {
   isPeoplePanelOpen: boolean;
@@ -205,7 +205,7 @@ export default function Header({ isPeoplePanelOpen, setIsPeoplePanelOpen }: Head
           title="Home"
         >
           <i className="fas fa-microphone-alt" />
-          Mira
+          Dadei
         </Link>
       </div>
 

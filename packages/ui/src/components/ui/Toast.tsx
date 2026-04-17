@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ToastType } from '@mira/ui/types/models.types';
-import { cn } from '@mira/ui/lib/cn';
+import { ToastType } from '@dadei/ui/types/models.types';
+import { cn } from '@dadei/ui/lib/cn';
 
 interface ToastProps {
   message: string;

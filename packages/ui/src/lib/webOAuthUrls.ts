@@ -1,7 +1,7 @@
-import { ENDPOINTS } from '@mira/ui/shared/api/constants';
+import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 
 function apiOriginPrefix(): string {
-  const apiUrl = process.env.MIRA_API_URL || 'http://localhost:8000';
+  const apiUrl = process.env.API_URL || 'http://localhost:8000';
   const isBeta = process.env.BETA === 'true';
   const prefix = isBeta ? '/api/v2' : '/api/v1';
   return `${apiUrl.replace(/\/$/, '')}${prefix}`;

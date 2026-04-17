@@ -1,10 +1,10 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { personsApi } from '@mira/ui/lib/api/persons';
-import { Person } from '@mira/ui/types/models.types';
-import { useToast } from '@mira/ui/contexts/ToastContext';
-import Modal from '@mira/ui/components/ui/Modal';
+import { personsApi } from '@dadei/ui/lib/api/persons';
+import { Person } from '@dadei/ui/types/models.types';
+import { useToast } from '@dadei/ui/contexts/ToastContext';
+import Modal from '@dadei/ui/components/ui/Modal';
 
 interface PeoplePanelProps {
   isOpen: boolean;

@@ -35,7 +35,7 @@ function loadEnvFile(filePath, { override } = { override: false }) {
 loadEnvFile(path.join(frontendRoot, '.env'), { override: false });
 loadEnvFile(path.join(frontendRoot, '.env.local'), { override: true });
 
-const port = process.env.MIRA_RENDERER_DEV_PORT || '59247';
+const port = process.env.RENDERER_DEV_PORT || '59247';
 const mainJs = path.join(desktopRoot, 'dist/main/background.js');
 
 async function main() {

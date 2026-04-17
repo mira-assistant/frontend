@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@mira/ui/hooks/useAuth';
-import { useToast } from '@mira/ui/contexts/ToastContext';
-import ActionWebhookBanners from '@mira/ui/components/ui/ActionWebhookBanners';
-import Header from '@mira/ui/components/Header';
-import MicrophoneButton from '@mira/ui/components/MicrophoneButton';
-import InteractionPanel from '@mira/ui/components/InteractionPanel';
-import Toast from '@mira/ui/components/ui/Toast';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useToast } from '@dadei/ui/contexts/ToastContext';
+import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
+import Header from '@dadei/ui/components/Header';
+import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
+import InteractionPanel from '@dadei/ui/components/InteractionPanel';
+import Toast from '@dadei/ui/components/ui/Toast';
 
-export default function MiraAppPage() {
+export default function AppPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const { toasts, removeToast } = useToast();
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function MiraAppPage() {
       <div className="flex h-screen items-center justify-center bg-linear-to-br from-[#00ff88] to-[#00cc6a]">
         <div className="flex flex-col items-center gap-4">
           <i className="fas fa-microphone-alt text-6xl text-white animate-pulse" />
-          <p className="text-xl font-medium text-white">Loading Mira…</p>
+          <p className="text-xl font-medium text-white">Loading Dadei…</p>
         </div>
       </div>
     );

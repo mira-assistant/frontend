@@ -1,8 +1,8 @@
-# Mira Frontend
+# Dadei Frontend
 
 ## Overview
 
-Mira Frontend is an npm workspaces monorepo that ships two production surfaces for the same product: a **browser SPA** and an **Electron desktop** client. Both share a **typed React UI layer** and API/realtime conventions, so product behavior stays consistent while each runtime handles its own constraints (tabs vs. native audio, OS keychain, installers).
+Dadei Frontend is an npm workspaces monorepo that ships two production surfaces for the same product: a **browser SPA** and an **Electron desktop** client. Both share a **typed React UI layer** and API/realtime conventions, so product behavior stays consistent while each runtime handles its own constraints (tabs vs. native audio, OS keychain, installers).
 
 ## Why This Is Hard
 
@@ -14,7 +14,7 @@ Mira Frontend is an npm workspaces monorepo that ships two production surfaces f
 
 ## Architecture Highlights
 
-- **Monorepo layout:** `apps/website` (Vite + React), `apps/desktop` (Electron + Vite renderer), and `packages/ui` (`@mira/ui`) for shared components and client plumbing.
+- **Monorepo layout:** `apps/website` (Vite + React), `apps/desktop` (Electron + Vite renderer), and `packages/ui` (`@dadei/ui`) for shared components and client plumbing.
 - **Layered React apps:** contexts and services orchestrate auth, API access, audio/realtime, and notifications so screens stay composable as the product grows.
 - **HTTP + WebSockets:** a shared mental model of versioned REST (`/api/v1`, `/api/v2` where configured) alongside resilient WebSocket clients (heartbeats, backoff, fan-out to UI).
 - **Electron process model:** main process owns window lifecycle, OAuth handoff, updates, and compatibility checks; preload exposes a narrow IPC surface; renderer stays a standard React app with `contextIsolation` and without broad Node exposure.
@@ -22,7 +22,7 @@ Mira Frontend is an npm workspaces monorepo that ships two production surfaces f
 
 ## Engineering Decisions and Tradeoffs
 
-- **Workspaces over separate repos:** one dependency graph and shared `@mira/ui` package; slightly more discipline on boundaries, much less copy-paste across web and desktop.
+- **Workspaces over separate repos:** one dependency graph and shared `@dadei/ui` package; slightly more discipline on boundaries, much less copy-paste across web and desktop.
 - **Security over convenience in Electron:** explicit IPC instead of giving the renderer full Node reduces risk and keeps the attack surface reviewable.
 - **Resilience over strict immediacy:** combining realtime streams with REST recovery helps the UI self-heal when messages arrive out of order or after a reconnect.
 - **Env at the monorepo root:** `frontend/.env` drives both Vite apps so local and CI behavior stay aligned (see `apps/website/vite.config.ts` and `apps/desktop/main/env.ts`).
@@ -38,7 +38,7 @@ Mira Frontend is an npm workspaces monorepo that ships two production surfaces f
 ## Impact
 
 - **Users:** one product experience in the browser or on the desktop, with realtime feedback and navigable history after live sessions.
-- **The team:** a single frontend codebase can evolve features once in `@mira/ui` or shared client code and land in both clients.
+- **The team:** a single frontend codebase can evolve features once in `@dadei/ui` or shared client code and land in both clients.
 - **Hiring signal:** this repo demonstrates full-stack *client* ownership—SPA architecture, realtime systems, Electron hardening, and release engineering—not only component-level UI work.
 
 ## Minimal Development Notes
@@ -49,10 +49,10 @@ npm install
 
 Create `frontend/.env` at the monorepo root (both apps read it) with at least:
 
-- `MIRA_API_URL` — backend base URL (defaults to `http://localhost:8000` if omitted)
+- `API_URL` — backend base URL (defaults to `http://localhost:8000` if omitted)
 - `BETA` — optional; `true` when exercising beta API routing where applicable
 
-Production builds (`vite build` for the website or desktop renderer) read **`MIRA_API_URL` from the monorepo root** via `loadEnv` (`.env.production` or environment variables such as on Vercel). The desktop installer workflow writes that root `.env.production` before packaging so the renderer bundle matches the API the Electron main process uses.
+Production builds (`vite build` for the website or desktop renderer) read **`API_URL` from the monorepo root** via `loadEnv` (`.env.production` or environment variables such as on Vercel). The desktop installer workflow writes that root `.env.production` before packaging so the renderer bundle matches the API the Electron main process uses.
 
 Common commands from the repo root:
 
@@ -64,4 +64,4 @@ npm run build:website    # production SPA build
 npm run package:desktop  # desktop build + installer (no publish)
 ```
 
-Point `MIRA_API_URL` at your running Mira API (for example `http://localhost:8000` when the backend is up locally).
+Point `API_URL` at your running API (for example `http://localhost:8000` when the backend is up locally).

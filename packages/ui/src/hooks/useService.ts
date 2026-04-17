@@ -1,6 +1,6 @@
 
 import { useContext } from 'react';
-import { ServiceContext } from '@mira/ui/contexts/ServiceContext';
+import { ServiceContext } from '@dadei/ui/contexts/ServiceContext';
 
 export function useService() {
   const context = useContext(ServiceContext);

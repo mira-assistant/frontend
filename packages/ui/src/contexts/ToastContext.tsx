@@ -1,6 +1,6 @@
 
 import { createContext, useContext, useState, useCallback } from 'react';
-import { ToastType } from '@mira/ui/types/models.types';
+import { ToastType } from '@dadei/ui/types/models.types';
 
 interface ToastMessage {
   id: string;

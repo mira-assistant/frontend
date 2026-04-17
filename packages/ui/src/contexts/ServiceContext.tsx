@@ -1,11 +1,11 @@
 
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '@mira/ui/hooks/useAuth';
-import { useToast } from '@mira/ui/contexts/ToastContext';
-import { serviceApi } from '@mira/ui/lib/api/service';
-import { getStoredClientName, setStoredClientName } from '@mira/ui/lib/clientNameStorage';
-import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@mira/ui/lib/realtimeClient';
-import { webTokenStore } from '@mira/ui/lib/webTokenStore';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useToast } from '@dadei/ui/contexts/ToastContext';
+import { serviceApi } from '@dadei/ui/lib/api/service';
+import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
+import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
+import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
@@ -123,7 +123,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
 
       const accessToken = webTokenStore.get()?.accessToken;
       if (!accessToken) return;
-      const baseUrl = process.env.MIRA_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.API_URL || 'http://localhost:8000';
       const prefix = process.env.BETA === 'true' ? '/api/v2' : '/api/v1';
       const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(clientName)}`;
       void fetch(endpoint, {

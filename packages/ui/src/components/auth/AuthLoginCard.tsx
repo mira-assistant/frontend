@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useAuth } from '@mira/ui/hooks/useAuth';
-import { authApi } from '@mira/ui/lib/api/auth';
-import { buildWebGoogleOAuthLoginUrl } from '@mira/ui/lib/webOAuthUrls';
+import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { authApi } from '@dadei/ui/lib/api/auth';
+import { buildWebGoogleOAuthLoginUrl } from '@dadei/ui/lib/webOAuthUrls';
 
 const veilEase = [0.22, 1, 0.36, 1] as const;
 
@@ -143,7 +143,7 @@ export default function AuthLoginCard({ onAuthenticated, webOAuthNextPath = '/ap
           <i className="fas fa-microphone-alt text-2xl text-[#00a855]" aria-hidden />
         </div>
         <h1 className="bg-linear-to-r from-slate-800 via-slate-700 to-[#00a855] bg-clip-text text-2xl font-semibold tracking-tight text-transparent">
-          Welcome to Mira
+          Welcome to Dadei
         </h1>
         <p className="mt-2 text-sm text-slate-600">Sign in to your intelligent voice workspace</p>
       </div>

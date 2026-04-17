@@ -1,5 +1,5 @@
-import { api } from '@mira/ui/shared/api/client';
-import { ENDPOINTS } from '@mira/ui/shared/api/constants';
+import { api } from '@dadei/ui/shared/api/client';
+import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 import { buildEndpoint, getClientIpAddresses, retryWithBackoff } from './utils';
 
 // Types
