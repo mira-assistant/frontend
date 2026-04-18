@@ -24,7 +24,7 @@ function FloatingAppMockup() {
   const springRotateY = useSpring(rotateY, { stiffness: 80, damping: 22 });
 
   return (
-    <div ref={ref} className="relative mx-auto w-full max-w-[min(92vw,520px)] [perspective:1400px]">
+    <div ref={ref} className="relative mx-auto w-full max-w-[min(92vw,520px)] perspective-[1400px]">
       <motion.div
         style={{
           rotateX: springRotateX,
@@ -41,7 +41,7 @@ function FloatingAppMockup() {
             reduce ? undefined : { duration: 5.5, repeat: Infinity, ease: 'easeInOut' }
           }
         >
-        <div className="absolute -inset-8 -z-10 rounded-[2rem] bg-linear-to-br from-[#00ff88]/25 via-violet-400/20 to-sky-400/25 blur-3xl" />
+        <div className="absolute -inset-8 -z-10 rounded-4xl bg-linear-to-br from-[#00ff88]/25 via-violet-400/20 to-sky-400/25 blur-3xl" />
         <div className="flex items-stretch gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-linear-to-br from-[#f8fffc] to-[#eefcfb] shadow-inner">
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-10">
             <div className="relative">
@@ -345,7 +345,7 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08, duration: 0.5 }}
-                  className="relative rounded-2xl border border-white/10 bg-white/[0.06] p-8 backdrop-blur-md"
+                  className="relative rounded-2xl border border-white/10 bg-white/6 p-8 backdrop-blur-md"
                 >
                   <span className="text-4xl font-bold text-emerald-400/30">{item.step}</span>
                   <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
@@ -357,7 +357,7 @@ export default function LandingPage() {
         </section>
 
         <section id="get-app" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24 sm:px-8">
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200/90 bg-linear-to-br from-white to-emerald-50/40 p-10 shadow-[0_40px_100px_-40px_rgba(15,23,42,0.2)] sm:p-14">
+          <div className="overflow-hidden rounded-4xl border border-slate-200/90 bg-linear-to-br from-white to-emerald-50/40 p-10 shadow-[0_40px_100px_-40px_rgba(15,23,42,0.2)] sm:p-14">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
               <div>
                 <h2 className="font-display text-3xl font-normal tracking-tight text-slate-900 sm:text-4xl">

@@ -11,8 +11,7 @@ export { useAuth } from './hooks/useAuth';
 export { useService } from './hooks/useService';
 export { useAudio } from './hooks/useAudio';
 
-export { default as AuthLoginCard } from './components/auth/AuthLoginCard';
-export { default as AuthLoginBackdrop } from './components/auth/AuthLoginBackdrop';
+export { default as LoginOverlay } from './components/LoginModal';
 export { default as Header } from './components/Header';
 export { default as MicrophoneButton } from './components/MicrophoneButton';
 export { default as InteractionPanel } from './components/InteractionPanel';

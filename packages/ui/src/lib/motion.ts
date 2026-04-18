@@ -6,11 +6,6 @@ export const transitionFast = {
   ease: veilEase,
 } as const;
 
-export const transitionModal = {
-  duration: 0.28,
-  ease: veilEase,
-} as const;
-
 export const teardropEnter = {
   duration: 0.22,
   ease: veilEase,

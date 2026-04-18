@@ -7,7 +7,7 @@ import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/InteractionPanel';
 import Toast from '@dadei/ui/components/ui/Toast';
-import AssistantSettingsModal from '@dadei/ui/components/settings/AssistantSettingsModal';
+import AssistantSettingsModal from '@dadei/ui/components/SettingsModal';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 

@@ -7,7 +7,6 @@ import { interactionsApi } from '@dadei/ui/lib/api/interactions';
 import { conversationsApi } from '@dadei/ui/lib/api/conversations';
 import { useService } from '@dadei/ui/hooks/useService';
 import { useToast } from '@dadei/ui/contexts/ToastContext';
-import Modal from '@dadei/ui/components/ui/Modal';
 import { subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 
 const ORPHAN_KEY = '__orphan__';
@@ -111,6 +110,95 @@ interface ConversationGroupView extends ConversationGroupState {
   isExpanded: boolean;
 }
 
+type SplitDeleteGroup = 'interaction' | 'conversation';
+
+function SplitDeleteToolbar({
+  armed,
+  onArm,
+  onDisarm,
+  onConfirm,
+  group,
+  idleTitle,
+  idleAriaLabel,
+}: {
+  armed: boolean;
+  onArm: () => void;
+  onDisarm: () => void;
+  onConfirm: () => void;
+  group: SplitDeleteGroup;
+  idleTitle: string;
+  idleAriaLabel: string;
+}) {
+  const hoverVisible =
+    group === 'interaction'
+      ? 'group-hover/interaction:opacity-100'
+      : 'group-hover/conv:opacity-100';
+
+  return (
+    <div
+      data-split-delete
+      className="relative h-9 w-[4.75rem] shrink-0 self-center"
+      onClick={e => e.stopPropagation()}
+    >
+      <AnimatePresence initial={false} mode="wait">
+        {armed ? (
+          <motion.div
+            key="del-armed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.09, ease: 'easeOut' }}
+            className="absolute inset-0 flex items-center justify-end gap-0.5"
+          >
+            <button
+              type="button"
+              aria-label="Confirm delete"
+              title="Confirm delete"
+              onClick={e => {
+                e.stopPropagation();
+                onConfirm();
+              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-emerald-400/95 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              aria-label="Cancel"
+              title="Cancel"
+              onClick={e => {
+                e.stopPropagation();
+                onDisarm();
+              }}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-rose-400/90 transition-colors hover:bg-rose-950/65 hover:text-rose-100"
+            >
+              <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+          </motion.div>
+        ) : (
+          <motion.button
+            key="del-idle"
+            type="button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.09, ease: 'easeOut' }}
+            title={idleTitle}
+            aria-label={idleAriaLabel}
+            onClick={e => {
+              e.stopPropagation();
+              onArm();
+            }}
+            className={`absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-lg text-rose-400/90 opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-rose-950/70 hover:text-rose-100 ${hoverVisible}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function InteractionPanel() {
   const { isConnected } = useService();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -131,17 +219,21 @@ export default function InteractionPanel() {
   }, [conversationGroups]);
 
   const [armedInteractionDeleteId, setArmedInteractionDeleteId] = useState<string | null>(null);
-  const [deleteConversationModal, setDeleteConversationModal] = useState<string | null>(null);
+  const [armedConversationDeleteId, setArmedConversationDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!armedInteractionDeleteId) return;
+    if (!armedInteractionDeleteId && !armedConversationDeleteId) return;
     const onDown = (e: MouseEvent) => {
       const el = e.target as HTMLElement;
       if (el.closest('[data-split-delete]')) return;
       setArmedInteractionDeleteId(null);
+      setArmedConversationDeleteId(null);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setArmedInteractionDeleteId(null);
+      if (e.key === 'Escape') {
+        setArmedInteractionDeleteId(null);
+        setArmedConversationDeleteId(null);
+      }
     };
     document.addEventListener('mousedown', onDown);
     window.addEventListener('keydown', onKey);
@@ -149,7 +241,7 @@ export default function InteractionPanel() {
       document.removeEventListener('mousedown', onDown);
       window.removeEventListener('keydown', onKey);
     };
-  }, [armedInteractionDeleteId]);
+  }, [armedInteractionDeleteId, armedConversationDeleteId]);
 
   const greenShades = [
     { background: '#f0fffa', border: '#00ff88', text: '#00cc6a' },
@@ -402,16 +494,21 @@ export default function InteractionPanel() {
       const group = conversationGroups.find(
         g => g.conversation?.id === conversationId || groupKey(g) === conversationId
       );
-      if (!group) return;
+      if (!group) {
+        setArmedConversationDeleteId(null);
+        return;
+      }
 
       await Promise.all(group.interactions.map(i => interactionsApi.delete(i.id)));
 
       setConversationGroups(prev => prev.filter(g => groupKey(g) !== conversationId));
 
       showToast('Conversation deleted', 'success');
+      setArmedConversationDeleteId(null);
     } catch (error) {
       console.error('Failed to delete conversation:', error);
       showToast('Failed to delete conversation', 'error');
+      setArmedConversationDeleteId(null);
     }
   };
 
@@ -456,8 +553,7 @@ export default function InteractionPanel() {
   };
 
   return (
-    <>
-      <div className="flex h-full flex-col overflow-hidden rounded-none bg-zinc-950/30">
+    <div className="flex h-full flex-col overflow-hidden rounded-none bg-zinc-950/30">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] bg-zinc-950/40 px-6 py-6 backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-zinc-100">Interactions</h2>
@@ -556,17 +652,18 @@ export default function InteractionPanel() {
                     </div>
 
                     {group.conversation ? (
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          setDeleteConversationModal(group.conversation!.id);
+                      <SplitDeleteToolbar
+                        group="conversation"
+                        armed={armedConversationDeleteId === group.conversation.id}
+                        onArm={() => {
+                          setArmedInteractionDeleteId(null);
+                          setArmedConversationDeleteId(group.conversation!.id);
                         }}
-                        className="flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg text-rose-400/90 transition-colors hover:bg-rose-950/50 hover:text-rose-300"
-                        title="Delete conversation"
-                      >
-                        <i className="fas fa-trash text-xs" aria-hidden />
-                      </button>
+                        onDisarm={() => setArmedConversationDeleteId(null)}
+                        onConfirm={() => void handleDeleteConversation(group.conversation!.id)}
+                        idleTitle="Delete conversation"
+                        idleAriaLabel="Delete conversation"
+                      />
                     ) : null}
                   </div>
 
@@ -606,67 +703,18 @@ export default function InteractionPanel() {
                                   <p className="text-sm leading-relaxed text-zinc-200">{interaction.text}</p>
                                 </div>
 
-                                <div
-                                  data-split-delete
-                                  className="flex shrink-0 items-center self-center"
-                                  onClick={e => e.stopPropagation()}
-                                >
-                                  <AnimatePresence mode="wait" initial={false}>
-                                    {armedInteractionDeleteId === interaction.id ? (
-                                      <motion.div
-                                        key="del-armed"
-                                        initial={{ opacity: 0, x: 6 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 4 }}
-                                        transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-                                        className="flex items-center gap-0.5"
-                                      >
-                                        <button
-                                          type="button"
-                                          aria-label="Confirm delete"
-                                          title="Confirm delete"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            void handleDeleteInteraction(interaction.id);
-                                          }}
-                                          className="rounded-md p-1.5 text-emerald-400/95 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
-                                        >
-                                          <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          aria-label="Cancel"
-                                          title="Cancel"
-                                          onClick={e => {
-                                            e.stopPropagation();
-                                            setArmedInteractionDeleteId(null);
-                                          }}
-                                          className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
-                                        >
-                                          <X className="h-3.5 w-3.5" strokeWidth={2.5} />
-                                        </button>
-                                      </motion.div>
-                                    ) : (
-                                      <motion.button
-                                        key="del-idle"
-                                        type="button"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.12 }}
-                                        title="Delete interaction"
-                                        aria-label="Delete interaction"
-                                        onClick={e => {
-                                          e.stopPropagation();
-                                          setArmedInteractionDeleteId(interaction.id);
-                                        }}
-                                        className="rounded-md p-1.5 text-rose-400/90 opacity-0 transition-[opacity,color] duration-200 group-hover/interaction:opacity-100 hover:bg-rose-950/30 hover:text-rose-300"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
-                                      </motion.button>
-                                    )}
-                                  </AnimatePresence>
-                                </div>
+                                <SplitDeleteToolbar
+                                  group="interaction"
+                                  armed={armedInteractionDeleteId === interaction.id}
+                                  onArm={() => {
+                                    setArmedConversationDeleteId(null);
+                                    setArmedInteractionDeleteId(interaction.id);
+                                  }}
+                                  onDisarm={() => setArmedInteractionDeleteId(null)}
+                                  onConfirm={() => void handleDeleteInteraction(interaction.id)}
+                                  idleTitle="Delete interaction"
+                                  idleAriaLabel="Delete interaction"
+                                />
                               </div>
                             </div>
                           );
@@ -680,20 +728,5 @@ export default function InteractionPanel() {
           )}
         </div>
       </div>
-
-      {/* Delete Conversation Modal */}
-      <Modal
-        isOpen={deleteConversationModal !== null}
-        onClose={() => setDeleteConversationModal(null)}
-        onConfirm={() => {
-          if (deleteConversationModal) handleDeleteConversation(deleteConversationModal);
-          setDeleteConversationModal(null);
-        }}
-        title="Delete Conversation"
-        message="Are you sure you want to delete this entire conversation? All interactions will be permanently deleted."
-        confirmText="Delete Conversation"
-        variant="danger"
-      />
-    </>
   );
 }

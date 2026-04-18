@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import AuthLoginBackdrop from '@dadei/ui/components/auth/AuthLoginBackdrop';
-import AuthLoginCard from '@dadei/ui/components/auth/AuthLoginCard';
+import LoginOverlay from '@dadei/ui/components/LoginModal';
 import { useAuth } from '@dadei/ui/hooks/useAuth';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 
@@ -40,13 +39,9 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLoginBackdrop>
-      <div className="relative z-10 mx-auto flex w-full max-w-lg flex-col items-center justify-center">
-        <AuthLoginCard
-          webOAuthNextPath={nextPath}
-          onAuthenticated={() => navigate(nextPath, { replace: true })}
-        />
-      </div>
-    </AuthLoginBackdrop>
+    <LoginOverlay
+      webOAuthNextPath={nextPath}
+      onAuthenticated={() => navigate(nextPath, { replace: true })}
+    />
   );
 }
