@@ -28,3 +28,10 @@ export interface AuthResponse {
         is_active: boolean;
     };
 }
+
+/** Current user from GET /auth/me */
+export interface UserMe {
+    id: string;
+    email: string;
+    has_password: boolean;
+}

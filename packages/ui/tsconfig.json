@@ -15,7 +15,7 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@mira/ui/*": ["./src/*"]
+      "@dadei/ui/*": ["./src/*"]
     }
   },
   "include": ["src/**/*"]

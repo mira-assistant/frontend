@@ -16,8 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@mira/ui": ["../../packages/ui/src/index.ts"],
-      "@mira/ui/*": ["../../packages/ui/src/*"]
+      "@dadei/ui": ["../../packages/ui/src/index.ts"],
+      "@dadei/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"]

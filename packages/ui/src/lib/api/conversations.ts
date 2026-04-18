@@ -1,7 +1,7 @@
-import { api } from '@mira/ui/shared/api/client';
-import { ENDPOINTS } from '@mira/ui/shared/api/constants';
-import { buildEndpoint } from '@mira/ui/lib/api/utils';
-import { Conversation } from '@mira/ui/types/models.types';
+import { api } from '@dadei/ui/shared/api/client';
+import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
+import { buildEndpoint } from '@dadei/ui/lib/api/utils';
+import { Conversation } from '@dadei/ui/types/models.types';
 
 export const conversationsApi = {
   /**

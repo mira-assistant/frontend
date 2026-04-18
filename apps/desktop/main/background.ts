@@ -14,9 +14,8 @@ import { handleGoogleOAuth } from './auth/oauth-handler';
 const isDev = process.env.NODE_ENV === 'development';
 
 /** Dev: local Vite dev server for the desktop renderer (port must match renderer/vite.config.ts). */
-const RENDERER_DEV_PORT = process.env.MIRA_RENDERER_DEV_PORT || '59247';
-const RENDERER_DEV_URL =
-  process.env.MIRA_RENDERER_DEV_URL || `http://localhost:${RENDERER_DEV_PORT}`;
+const RENDERER_DEV_PORT = process.env.RENDERER_DEV_PORT || '59247';
+const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 
 let mainWindow: BrowserWindow | null = null;
 let currentClientName: string | null = null;

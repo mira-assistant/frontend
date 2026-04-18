@@ -43,15 +43,15 @@ jobs:
 
       - name: Write .env.production (Vite + Electron)
         env:
-          MIRA_API_URL: ${{ secrets.MIRA_API_URL }}
+          API_URL: ${{ secrets.API_URL }}
         shell: bash
         run: |
-          if [ -z "$MIRA_API_URL" ]; then
-            echo "Missing MIRA_API_URL"
+          if [ -z "$API_URL" ]; then
+            echo "Missing API_URL"
             exit 1
           fi
-          printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > .env.production
-          printf 'MIRA_API_URL=%s\nBETA=false\n' "$MIRA_API_URL" > apps/desktop/.env.production
+          printf 'API_URL=%s\nBETA=false\n' "$API_URL" > .env.production
+          printf 'API_URL=%s\nBETA=false\n' "$API_URL" > apps/desktop/.env.production
 
       - name: Rebuild native modules (keytar)
         working-directory: apps/desktop
@@ -103,7 +103,7 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.pkg.outputs.tag }}
-          name: Mira App ${{ steps.pkg.outputs.tag }}
+          name: Dadei App ${{ steps.pkg.outputs.tag }}
           commit: ${{ github.sha }}
           allowUpdates: true
           removeArtifacts: true

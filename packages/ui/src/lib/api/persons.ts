@@ -1,7 +1,7 @@
-import { api } from '@mira/ui/shared/api/client';
-import { ENDPOINTS } from '@mira/ui/shared/api/constants';
+import { api } from '@dadei/ui/shared/api/client';
+import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 import { buildEndpoint } from './utils';
-import { Person } from '@mira/ui/types/models.types';
+import { Person } from '@dadei/ui/types/models.types';
 
 interface UpdatePersonData {
   name?: string;

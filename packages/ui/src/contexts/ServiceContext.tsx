@@ -1,11 +1,11 @@
 
-import { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '@mira/ui/hooks/useAuth';
-import { useToast } from '@mira/ui/contexts/ToastContext';
-import { serviceApi } from '@mira/ui/lib/api/service';
-import { getStoredClientName, setStoredClientName } from '@mira/ui/lib/clientNameStorage';
-import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@mira/ui/lib/realtimeClient';
-import { webTokenStore } from '@mira/ui/lib/webTokenStore';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
+import { serviceApi } from '@dadei/ui/lib/api/service';
+import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
+import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
+import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
@@ -22,34 +22,67 @@ export const ServiceContext = createContext<ServiceContextType | undefined>(unde
 
 const ENABLE_TIMEOUT_MS = 5000;
 
+function readInitialClientName(): string {
+  if (typeof window === 'undefined' || window.electronAPI) {
+    return 'web-client';
+  }
+  return getStoredClientName() || 'web-client';
+}
+
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
-  const { showToast } = useToast();
+  const { showToast } = useNotifications();
   const getAccessTokenRef = useRef(getAccessToken);
   getAccessTokenRef.current = getAccessToken;
 
   const [isServiceEnabled, setIsServiceEnabled] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [clientName, setClientName] = useState('web-client');
+  const [clientName, setClientName] = useState(readInitialClientName);
+  /** False until persisted identity has been applied (see mount effect). */
+  const [isClientIdentityReady, setIsClientIdentityReady] = useState(false);
   const [isTogglingService, setIsTogglingService] = useState(false);
   const [registrationConflict, setRegistrationConflict] = useState(false);
 
   const enableTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRegisteredRef = useRef(false);
+  /** Latest client id for stale checks after async register. */
+  const clientNameRef = useRef(clientName);
+  clientNameRef.current = clientName;
 
+  /**
+   * Resolve persisted identity before any registration.
+   * Starts false for all platforms so the register effect never runs in the same passive flush
+   * as the first paint (avoids ordering races with other state).
+   * Web: name is already in state from readInitialClientName; readiness is deferred one microtask.
+   * Electron: wait for IPC, then optionally replace default clientName.
+   */
   useEffect(() => {
-    const initialize = async () => {
-      if (window.electronAPI) {
-        const result = await window.electronAPI.getClientName();
-        if (result.success && result.clientName) {
-          setClientName(result.clientName);
-        }
-      } else {
-        const saved = getStoredClientName();
-        if (saved) setClientName(saved);
-      }
+    let cancelled = false;
+
+    if (window.electronAPI) {
+      void window.electronAPI
+        .getClientName()
+        .then((result) => {
+          if (cancelled) return;
+          if (result.success && result.clientName) {
+            setClientName(result.clientName);
+          }
+        })
+        .catch(() => {
+          /* keep default client name */
+        })
+        .finally(() => {
+          if (!cancelled) setIsClientIdentityReady(true);
+        });
+    } else {
+      queueMicrotask(() => {
+        if (!cancelled) setIsClientIdentityReady(true);
+      });
+    }
+
+    return () => {
+      cancelled = true;
     };
-    initialize();
   }, []);
 
   useEffect(() => {
@@ -71,25 +104,59 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    let registerCancelled = false;
+
     const registerClient = async () => {
+      if (!isClientIdentityReady) return;
       if (!clientName) return;
       if (isRegisteredRef.current) return;
 
+      const idAtStart = clientName;
+
       try {
-        await serviceApi.registerClient(clientName);
+        await serviceApi.registerClient(idAtStart);
+
+        if (registerCancelled) {
+          try {
+            await serviceApi.deregisterClient(idAtStart);
+          } catch {
+            /* best-effort undo of orphan registration */
+          }
+          return;
+        }
+
+        if (clientNameRef.current !== idAtStart) {
+          try {
+            await serviceApi.deregisterClient(idAtStart);
+          } catch {
+            /* best-effort */
+          }
+          return;
+        }
+
         setRegistrationConflict(false);
         if (window.electronAPI) {
-          await window.electronAPI.storeClientName(clientName);
+          await window.electronAPI.storeClientName(idAtStart);
         } else {
-          setStoredClientName(clientName);
+          setStoredClientName(idAtStart);
         }
+
+        if (registerCancelled || clientNameRef.current !== idAtStart) {
+          try {
+            await serviceApi.deregisterClient(idAtStart);
+          } catch {
+            /* best-effort */
+          }
+          return;
+        }
+
         setIsConnected(true);
         isRegisteredRef.current = true;
-        console.log(`Client ${clientName} registered`);
+        console.log(`Client ${idAtStart} registered`);
 
         startRealtimeClient({
           getAccessToken: () => getAccessTokenRef.current(),
-          clientId: clientName,
+          clientId: idAtStart,
         });
       } catch (error: any) {
         console.error('Failed to register client:', error);
@@ -97,7 +164,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
         if (status === 409) {
           setRegistrationConflict(true);
           showToast(
-            `Client name "${clientName}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
+            `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
             'error'
           );
         }
@@ -107,8 +174,12 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    registerClient();
-  }, [clientName, isAuthenticated, isAuthLoading]);
+    void registerClient();
+
+    return () => {
+      registerCancelled = true;
+    };
+  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, showToast]);
 
   useEffect(() => {
     if (!isAuthenticated || !isConnected) return;
@@ -123,7 +194,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
 
       const accessToken = webTokenStore.get()?.accessToken;
       if (!accessToken) return;
-      const baseUrl = process.env.MIRA_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.API_URL || 'http://localhost:8000';
       const prefix = process.env.BETA === 'true' ? '/api/v2' : '/api/v1';
       const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(clientName)}`;
       void fetch(endpoint, {
@@ -237,4 +308,12 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ServiceContext.Provider>
   );
+}
+
+export function useService() {
+  const context = useContext(ServiceContext);
+  if (context === undefined) {
+    throw new Error('useService must be used within a ServiceProvider');
+  }
+  return context;
 }

@@ -10,7 +10,7 @@ interface RootHealthResponse {
 }
 
 function apiBaseUrl(): string {
-  return (process.env.MIRA_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
+  return (process.env.API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 }
 
 function semverMajor(version: string): number | null {
@@ -21,7 +21,7 @@ function semverMajor(version: string): number | null {
 }
 
 /**
- * GET {MIRA_API_URL}/ — unreachable or bad payload: log and allow app to start.
+ * GET {API_URL}/ — unreachable or bad payload: log and allow app to start.
  * Major mismatch: blocking dialog, kick updater, caller should quit.
  */
 export async function assertBackendMajorCompatible(): Promise<boolean> {

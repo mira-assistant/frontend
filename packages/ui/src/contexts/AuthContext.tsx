@@ -1,18 +1,20 @@
 
-import { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { api } from '@mira/ui/shared/api/client';
-import { authApi } from '@mira/ui/lib/api/auth';
-import { webTokenStore } from '@mira/ui/lib/webTokenStore';
-import { AuthTokens, LoginCredentials, RegisterData } from '@mira/ui/types/auth.types';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { api } from '@dadei/ui/shared/api/client';
+import { authApi } from '@dadei/ui/lib/api/auth';
+import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
+import { AuthTokens, LoginCredentials, RegisterData, UserMe } from '@dadei/ui/types/auth.types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
+  user: UserMe | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   saveTokens: (newTokens: AuthTokens) => Promise<void>;
   getAccessToken: () => Promise<string | null>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -54,9 +56,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<UserMe | null>(null);
 
   const tokensRef = useRef<AuthTokens | null>(null);
   tokensRef.current = tokens;
+
+  const applyTokens = useCallback((next: AuthTokens | null) => {
+    tokensRef.current = next;
+    setTokens(next);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const me = await authApi.me();
+      setUser(me);
+    } catch {
+      setUser(null);
+    }
+  }, []);
 
   // Setup axios interceptors once; read tokens from tokensRef so Authorization is never stale.
   useEffect(() => {
@@ -92,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await persistTokens(newTokens.accessToken, newTokens.refreshToken);
 
-            setTokens(newTokens);
+            applyTokens(newTokens);
             setIsAuthenticated(true);
 
             // Retry original request with new token
@@ -105,8 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             await clearAllStoredTokens();
 
             // Clear state
-            setTokens(null);
+            applyTokens(null);
             setIsAuthenticated(false);
+            setUser(null);
 
             return Promise.reject(_refreshError);
           }
@@ -120,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       api.interceptors.request.eject(requestIntercept);
       api.interceptors.response.eject(responseIntercept);
     };
-  }, []);
+  }, [applyTokens]);
 
   // Initialize auth state on mount - verify tokens with refresh
   useEffect(() => {
@@ -139,15 +157,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             await persistTokens(newTokens.accessToken, newTokens.refreshToken);
 
-            setTokens(newTokens);
+            applyTokens(newTokens);
             setIsAuthenticated(true);
+
+            try {
+              const me = await authApi.me();
+              setUser(me);
+            } catch {
+              setUser(null);
+            }
 
             console.log('Authentication verified');
           } catch (_refreshError) {
             console.error('Token verification failed, clearing tokens');
             await clearAllStoredTokens();
-            setTokens(null);
+            applyTokens(null);
             setIsAuthenticated(false);
+            setUser(null);
           }
         } else {
           console.log('No stored tokens found');
@@ -162,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [applyTokens]);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
@@ -175,15 +201,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await persistTokens(newTokens.accessToken, newTokens.refreshToken);
 
-      setTokens(newTokens);
+      applyTokens(newTokens);
       setIsAuthenticated(true);
+
+      try {
+        const me = await authApi.me();
+        setUser(me);
+      } catch {
+        setUser(null);
+      }
 
       console.log('Logged in successfully');
     } catch (error: any) {
       console.error('Login error:', error);
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     }
-  }, []);
+  }, [applyTokens]);
 
   const register = useCallback(async (data: RegisterData) => {
     try {
@@ -196,34 +229,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await persistTokens(newTokens.accessToken, newTokens.refreshToken);
 
-      setTokens(newTokens);
+      applyTokens(newTokens);
       setIsAuthenticated(true);
+
+      try {
+        const me = await authApi.me();
+        setUser(me);
+      } catch {
+        setUser(null);
+      }
 
       console.log('Registered successfully');
     } catch (error: any) {
       console.error('Registration error:', error);
       throw new Error(error.response?.data?.detail || error.message || 'Registration failed');
     }
-  }, []);
+  }, [applyTokens]);
 
   const logout = useCallback(async () => {
     try {
       await clearAllStoredTokens();
 
-      setTokens(null);
+      applyTokens(null);
       setIsAuthenticated(false);
+      setUser(null);
 
       console.log('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, []);
+  }, [applyTokens]);
 
   const saveTokens = useCallback(async (newTokens: AuthTokens) => {
     await persistTokens(newTokens.accessToken, newTokens.refreshToken);
-    setTokens(newTokens);
+    applyTokens(newTokens);
     setIsAuthenticated(true);
-  }, []);
+    try {
+      const me = await authApi.me();
+      setUser(me);
+    } catch {
+      setUser(null);
+    }
+  }, [applyTokens]);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     return tokens?.accessToken ?? null;
@@ -234,14 +281,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         isAuthenticated,
         isLoading,
+        user,
         login,
         register,
         logout,
         saveTokens,
         getAccessToken,
+        refreshUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
 }

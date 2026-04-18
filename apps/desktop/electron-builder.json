@@ -1,9 +1,9 @@
 {
   "electronVersion": "39.8.8",
-  "appId": "com.mira.app",
-  "productName": "Mira Assistant",
+  "appId": "com.dadei.app",
+  "productName": "Dadei Assistant",
   "copyright": "Copyright © 2026 Ankur Desai",
-  "artifactName": "Mira-Assistant-${version}-${os}-${arch}.${ext}",
+  "artifactName": "Dadei-Assistant-${version}-${os}-${arch}.${ext}",
   "files": [
     "dist/**/*",
     "renderer/dist/**/*",
@@ -17,8 +17,8 @@
   "asar": true,
   "publish": {
     "provider": "github",
-    "owner": "mira-assistant",
-    "repo": "mira-frontend"
+    "owner": "dadei-assistant",
+    "repo": "dadei-frontend"
   },
   "win": {
     "target": "nsis",

@@ -1,6 +1,6 @@
 {
-  "name": "mira-desktop",
-  "version": "1.1.2",
+  "name": "dadei-desktop",
+  "version": "2.0.0",
   "author": {
     "name": "Ankur Desai",
     "email": "ardusa05@gmail.com",
@@ -15,7 +15,7 @@
     "clean": "rimraf dist renderer/dist release"
   },
   "dependencies": {
-    "@mira/ui": "*",
+    "@dadei/ui": "*",
     "@ricky0123/vad-react": "^0.0.36",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",

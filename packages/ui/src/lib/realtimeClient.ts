@@ -1,4 +1,4 @@
-import { buildRealtimeWebSocketUrl } from '@mira/ui/shared/api/realtime';
+import { buildRealtimeWebSocketUrl } from '@dadei/ui/shared/api/realtime';
 
 export type RealtimeMessage = Record<string, unknown> & {
   event?: string;

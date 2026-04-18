@@ -15,8 +15,8 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@mira/ui": ["../../../packages/ui/src/index.ts"],
-      "@mira/ui/*": ["../../../packages/ui/src/*"]
+      "@dadei/ui": ["../../../packages/ui/src/index.ts"],
+      "@dadei/ui/*": ["../../../packages/ui/src/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"]

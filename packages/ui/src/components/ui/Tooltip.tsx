@@ -1,13 +1,17 @@
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useLayoutEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@mira/ui/lib/cn';
+import { cn } from '@dadei/ui/lib/cn';
+
+/** Above people drawer (40) / main; below toasts (180), settings (≈240). */
+const TOOLTIP_PORTAL_Z = 195;
 
 interface TooltipProps {
   content: string;
   children: React.ReactNode;
   variant?: 'default' | 'success' | 'error';
-  show?: boolean; // Allow controlled visibility
+  show?: boolean;
   position?: 'top' | 'bottom';
 }
 
@@ -16,38 +20,88 @@ export default function Tooltip({
   children,
   variant = 'default',
   show,
-  position = 'bottom'
+  position = 'bottom',
 }: TooltipProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const targetRef = useRef<HTMLDivElement>(null);
 
-  // Use controlled visibility if provided, otherwise use hover state
   const isVisible = show !== undefined ? show : isHovered;
 
-  useEffect(() => {
-    if (isVisible && targetRef.current) {
-      const rect = targetRef.current.getBoundingClientRect();
-
-      if (position === 'bottom') {
-        setCoords({
-          top: rect.bottom + 8,
-          left: rect.left + rect.width / 2,
-        });
-      } else {
-        setCoords({
-          top: rect.top - 8,
-          left: rect.left + rect.width / 2,
-        });
-      }
+  const updatePosition = useCallback(() => {
+    if (!isVisible || !targetRef.current) return;
+    const rect = targetRef.current.getBoundingClientRect();
+    if (position === 'bottom') {
+      setCoords({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      });
+    } else {
+      setCoords({
+        top: rect.top - 8,
+        left: rect.left + rect.width / 2,
+      });
     }
   }, [isVisible, position]);
 
+  useLayoutEffect(() => {
+    updatePosition();
+  }, [updatePosition, content]);
+
+  useLayoutEffect(() => {
+    if (!isVisible) return;
+    updatePosition();
+    const onScrollOrResize = () => updatePosition();
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+    };
+  }, [isVisible, updatePosition]);
+
   const variantStyles = {
-    default: 'bg-gray-900 text-white',
-    success: 'bg-green-500 text-white',
-    error: 'bg-red-500 text-white',
+    default: 'bg-zinc-800 text-zinc-100 border border-white/10',
+    success: 'bg-emerald-950/95 text-emerald-100 border border-emerald-500/25',
+    error: 'bg-rose-950/95 text-rose-100 border border-rose-500/25',
   };
+
+  const bubble =
+    typeof document !== 'undefined' ? (
+      <AnimatePresence>
+        {isVisible ? (
+          <motion.div
+            key="tooltip-bubble"
+            initial={{ opacity: 0, y: position === 'bottom' ? -10 : 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: position === 'bottom' ? -10 : 10 }}
+            transition={{ duration: 0.15 }}
+            className={cn(
+              'fixed px-3 py-1.5 text-xs font-medium shadow-lg font-secondary',
+              '-translate-x-1/2 whitespace-nowrap rounded-lg',
+              variantStyles[variant]
+            )}
+            style={{
+              top: `${coords.top}px`,
+              left: `${coords.left}px`,
+              zIndex: TOOLTIP_PORTAL_Z,
+              ...(position === 'top' ? { transform: 'translate(-50%, -100%)' } : {}),
+            }}
+          >
+            {content}
+            <div
+              className={cn(
+                'absolute h-2 w-2 rotate-45',
+                position === 'bottom' ? '-top-1 left-1/2 -translate-x-1/2' : '-bottom-1 left-1/2 -translate-x-1/2',
+                variant === 'default' && 'bg-zinc-800',
+                variant === 'success' && 'bg-emerald-950',
+                variant === 'error' && 'bg-rose-950'
+              )}
+            />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    ) : null;
 
   return (
     <div
@@ -57,39 +111,7 @@ export default function Tooltip({
       onMouseLeave={() => setIsHovered(false)}
     >
       {children}
-
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: position === 'bottom' ? -10 : 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: position === 'bottom' ? -10 : 10 }}
-            transition={{ duration: 0.15 }}
-            className={cn(
-              'fixed z-50 px-3 py-1.5 text-xs font-medium rounded-lg shadow-lg',
-              '-translate-x-1/2 whitespace-nowrap',
-              variantStyles[variant]
-            )}
-            style={{
-              top: `${coords.top}px`,
-              left: `${coords.left}px`,
-              ...(position === 'top' && { transform: 'translate(-50%, -100%)' })
-            }}
-          >
-            {content}
-            {/* Arrow */}
-            <div
-              className={cn(
-                'absolute w-2 h-2 rotate-45',
-                position === 'bottom' ? '-top-1 left-1/2 -translate-x-1/2' : '-bottom-1 left-1/2 -translate-x-1/2',
-                variant === 'default' && 'bg-gray-900',
-                variant === 'success' && 'bg-green-500',
-                variant === 'error' && 'bg-red-500'
-              )}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {bubble ? createPortal(bubble, document.body) : null}
     </div>
   );
 }

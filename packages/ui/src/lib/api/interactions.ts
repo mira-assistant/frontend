@@ -1,7 +1,7 @@
-import { api } from '@mira/ui/shared/api/client';
-import { ENDPOINTS, API_CONFIG } from '@mira/ui/shared/api/constants';
+import { api } from '@dadei/ui/shared/api/client';
+import { ENDPOINTS, API_CONFIG } from '@dadei/ui/shared/api/constants';
 import { buildEndpoint } from './utils';
-import { Interaction } from '@mira/ui/types/models.types';
+import { Interaction } from '@dadei/ui/types/models.types';
 
 interface GetInteractionsParams {
   limit?: number;

@@ -1,8 +1,8 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useService } from '@mira/ui/hooks/useService';
-import { cn } from '@mira/ui/lib/cn';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
+import { cn } from '@dadei/ui/lib/cn';
 
 interface MicrophoneButtonProps {
   disableSpaceToggle?: boolean;
@@ -54,14 +54,13 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
           rotate: isServiceEnabled ? 0 : [0, -5, 5, -5, 5, 0]
         } : {}}
         className={cn(
-          'relative w-40 h-40 rounded-full transition-all duration-300 border-[3px] border-[rgba(255,255,255,0.3)]',
-          'flex items-center justify-center',
-          'focus:outline-none focus:ring-4 focus:ring-[#00ff88]/30',
+          'relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] border-white/15 transition-all duration-300',
+          'focus:outline-none focus:ring-4 focus:ring-emerald-500/25',
           micBlocked
-            ? 'bg-[#6b7280] cursor-not-allowed opacity-60'
+            ? 'cursor-not-allowed bg-zinc-700 opacity-60'
             : isServiceEnabled
-              ? 'bg-linear-to-br from-[#ff4444] to-[#e53e3e] shadow-[0_10px_30px_rgba(255,68,68,0.6),0_0_30px_rgba(255,68,68,0.4),0_0_60px_rgba(255,68,68,0.2)] cursor-pointer'
-              : 'bg-linear-to-br from-[#00ff88] to-[#00e676] shadow-[0_5px_20px_rgba(0,255,136,0.3)] hover:shadow-[0_15px_40px_rgba(0,255,136,0.7),0_0_40px_rgba(0,255,136,0.5),0_0_80px_rgba(0,255,136,0.3)] cursor-pointer'
+              ? 'cursor-pointer bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_10px_30px_rgba(225,29,72,0.45),0_0_40px_rgba(225,29,72,0.25)]'
+              : 'cursor-pointer bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_8px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_40px_rgba(16,185,129,0.45)]'
         )}
       >
         {/* Red Ripple Waves - when service enabled */}
@@ -111,7 +110,7 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
         {/* Green pulse effect when disabled (inactive) */}
         {!isServiceEnabled && !micBlocked && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-linear-to-br from-[#00ff88] to-[#00e676] opacity-0"
+            className="absolute inset-0 rounded-full bg-linear-to-br from-emerald-400 to-emerald-600 opacity-0"
             animate={{
               opacity: [0, 0.3, 0],
               scale: [1, 1.1, 1]
@@ -167,12 +166,12 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute bottom-20 flex items-center gap-2 text-sm text-[#9ca3af]"
+        className="absolute bottom-20 flex items-center gap-2 text-sm text-zinc-500 font-secondary"
       >
-        <kbd className="px-4 py-1 bg-white border border-[#e5e7eb] rounded-md shadow-sm font-mono text-base">
+        <kbd className="rounded-md border border-white/10 bg-zinc-900/80 px-4 py-1 font-mono text-base text-zinc-300 shadow-inner shadow-black/40">
           Space
         </kbd>
-        <span>to toggle Mira</span>
+        <span>to toggle</span>
       </motion.div>
     </div>
   );

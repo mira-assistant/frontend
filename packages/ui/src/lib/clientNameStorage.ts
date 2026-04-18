@@ -1,4 +1,4 @@
-const KEY = 'mira_client_name';
+const KEY = 'dadei_client_name';
 
 export function getStoredClientName(): string | null {
   try {

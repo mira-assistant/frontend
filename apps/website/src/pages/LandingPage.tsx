@@ -24,7 +24,7 @@ function FloatingAppMockup() {
   const springRotateY = useSpring(rotateY, { stiffness: 80, damping: 22 });
 
   return (
-    <div ref={ref} className="relative mx-auto w-full max-w-[min(92vw,520px)] [perspective:1400px]">
+    <div ref={ref} className="relative mx-auto w-full max-w-[min(92vw,520px)] perspective-[1400px]">
       <motion.div
         style={{
           rotateX: springRotateX,
@@ -41,7 +41,7 @@ function FloatingAppMockup() {
             reduce ? undefined : { duration: 5.5, repeat: Infinity, ease: 'easeInOut' }
           }
         >
-        <div className="absolute -inset-8 -z-10 rounded-[2rem] bg-linear-to-br from-[#00ff88]/25 via-violet-400/20 to-sky-400/25 blur-3xl" />
+        <div className="absolute -inset-8 -z-10 rounded-4xl bg-linear-to-br from-[#00ff88]/25 via-violet-400/20 to-sky-400/25 blur-3xl" />
         <div className="flex items-stretch gap-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-linear-to-br from-[#f8fffc] to-[#eefcfb] shadow-inner">
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-10">
             <div className="relative">
@@ -115,9 +115,12 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-[#00a855]">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-lg font-semibold text-[#00a855] font-brand"
+          >
             <i className="fas fa-microphone-alt" aria-hidden />
-            Mira
+            Dadei
           </Link>
           <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
             <a href="#features" className="transition-colors hover:text-slate-900">
@@ -132,13 +135,13 @@ export default function LandingPage() {
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <a
-              href={"https://github.com/mira-assistant/frontend/releases"}
+              href={"https://github.com/dadei-app/frontend/releases"}
               className="rounded-full border border-slate-200/90 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:px-4 sm:text-sm"
             >
               Get the app
             </a>
             <Link
-              to="/app"
+              to="/assistant"
               className="rounded-full bg-linear-to-r from-[#00e070] to-[#00b359] px-3 py-2 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(0,204,106,0.35)] transition hover:brightness-110 sm:px-5 sm:text-sm"
             >
               Open web app
@@ -180,7 +183,7 @@ export default function LandingPage() {
                 transition={{ duration: 0.55, delay: 0.12 }}
                 className="mt-6 max-w-xl text-lg leading-relaxed text-slate-600"
               >
-                Mira is a personal assistant that runs across your devices and keeps context with you—
+                Dadei is a personal assistant that runs across your devices and keeps context with you—
                 whether you are at your desk, on your laptop, or checking in from another screen. Speak
                 naturally, stay organized, and let the network do the coordination.
               </motion.p>
@@ -191,14 +194,14 @@ export default function LandingPage() {
                 className="mt-10 flex flex-wrap items-center gap-4"
               >
                 <Link
-                  to="/app"
+                  to="/assistant"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-7 py-3.5 text-sm font-semibold text-white shadow-xl transition hover:bg-slate-800"
                 >
                   Start in browser
                   <i className="fas fa-arrow-right text-xs opacity-80" aria-hidden />
                 </Link>
                 <a
-                  href={"https://github.com/mira-assistant/frontend/releases"}
+                  href={"https://github.com/dadei-app/frontend/releases"}
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-300 bg-white px-7 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50"
                 >
                   <i className="fab fa-apple text-lg" aria-hidden />
@@ -242,14 +245,14 @@ export default function LandingPage() {
           <SectionTitle
             eyebrow="Features"
             title="Save hours, stay sharper."
-            subtitle="From quick voice captures to richer follow-ups, Mira is designed around how you actually work."
+            subtitle="From quick voice captures to richer follow-ups, Dadei is designed around how you actually work."
           />
           <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: 'fa-wave-square',
                 title: 'Natural voice',
-                body: 'Talk the way you would to a person. Mira focuses on intent, not rigid commands.',
+                body: 'Talk the way you would to a person. Dadei focuses on intent, not rigid commands.',
                 tint: 'from-emerald-400/20 to-teal-400/10',
               },
               {
@@ -314,7 +317,7 @@ export default function LandingPage() {
                 Three beats of the same rhythm
               </h2>
               <p className="mt-4 text-lg text-slate-400">
-                Install or open Mira on each device you use. The experience stays familiar while the
+                Install or open Dadei on each device you use. The experience stays familiar while the
                 assistant coordinates in the background.
               </p>
             </div>
@@ -342,7 +345,7 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.08, duration: 0.5 }}
-                  className="relative rounded-2xl border border-white/10 bg-white/[0.06] p-8 backdrop-blur-md"
+                  className="relative rounded-2xl border border-white/10 bg-white/6 p-8 backdrop-blur-md"
                 >
                   <span className="text-4xl font-bold text-emerald-400/30">{item.step}</span>
                   <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
@@ -354,7 +357,7 @@ export default function LandingPage() {
         </section>
 
         <section id="get-app" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-24 sm:px-8">
-          <div className="overflow-hidden rounded-[2rem] border border-slate-200/90 bg-linear-to-br from-white to-emerald-50/40 p-10 shadow-[0_40px_100px_-40px_rgba(15,23,42,0.2)] sm:p-14">
+          <div className="overflow-hidden rounded-4xl border border-slate-200/90 bg-linear-to-br from-white to-emerald-50/40 p-10 shadow-[0_40px_100px_-40px_rgba(15,23,42,0.2)] sm:p-14">
             <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
               <div>
                 <h2 className="font-display text-3xl font-normal tracking-tight text-slate-900 sm:text-4xl">
@@ -366,14 +369,14 @@ export default function LandingPage() {
                 </p>
                 <div className="mt-8 flex flex-wrap gap-4">
                   <a
-                    href={"https://github.com/mira-assistant/frontend/releases"}
+                    href={"https://github.com/dadei-app/frontend/releases"}
                     className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
                   >
                     <i className="fas fa-download" aria-hidden />
                     Get the app
                   </a>
                   <Link
-                    to="/app"
+                    to="/assistant"
                     className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
                   >
                     Continue in browser
@@ -409,8 +412,8 @@ export default function LandingPage() {
             <dl className="mt-12 space-y-4">
               {[
                 {
-                  q: 'What is Mira?',
-                  a: 'Mira is a distributed personal assistant: you interact through voice and rich panels, and your experience can span multiple devices on the same network.',
+                  q: 'What is Dadei?',
+                  a: 'Dadei is a distributed personal assistant: you interact through voice and rich panels, and your experience can span multiple devices on the same network.',
                 },
                 {
                   q: 'How is the web app different from the desktop app?',
@@ -438,17 +441,17 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-8">
           <div className="flex items-center gap-2 text-slate-600">
             <i className="fas fa-microphone-alt text-[#00a855]" aria-hidden />
-            <span className="font-semibold text-slate-800">Mira</span>
-            <span className="text-sm text-slate-500">© {new Date().getFullYear()}</span>
+            <span className="font-semibold text-slate-800 font-brand">Dadei</span>
+            <span className="text-sm text-slate-500 font-secondary">© {new Date().getFullYear()}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
-            <Link to="/app" className="hover:text-slate-900">
+            <Link to="/assistant" className="hover:text-slate-900">
               Web app
             </Link>
             <a href="#features" className="hover:text-slate-900">
               Features
             </a>
-            <a href={"https://github.com/mira-assistant/frontend/releases"} className="hover:text-slate-900">
+            <a href={"https://github.com/dadei-app/frontend/releases"} className="hover:text-slate-900">
               Get the app
             </a>
           </div>

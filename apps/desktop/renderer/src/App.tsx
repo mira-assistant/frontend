@@ -1,33 +1,34 @@
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ToastProvider } from '@mira/ui/contexts/ToastContext';
-import { AuthProvider } from '@mira/ui/contexts/AuthContext';
-import { ServiceProvider } from '@mira/ui/contexts/ServiceContext';
-import { AudioProvider } from '@mira/ui/contexts/AudioContext';
-import MiraAppPage from '@mira/ui/pages/MiraAppPage';
-import LoginPage from '@mira/ui/pages/LoginPage';
+import { NotificationProvider } from '@dadei/ui/contexts/NotificationContext';
+import { AuthProvider } from '@dadei/ui/contexts/AuthContext';
+import { ServiceProvider } from '@dadei/ui/contexts/ServiceContext';
+import { AudioProvider } from '@dadei/ui/contexts/AudioContext';
+import AssistantLayout from '@dadei/ui/pages/AssistantLayout';
+import LoginPage from '@dadei/ui/pages/LoginPage';
 
 export function App() {
   return (
-    <MemoryRouter initialEntries={['/app']}>
-      <ToastProvider>
+    <MemoryRouter initialEntries={['/assistant']}>
+      <NotificationProvider>
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route
-              path="/app"
+              path="/assistant"
               element={
                 <ServiceProvider>
                   <AudioProvider>
-                    <MiraAppPage />
+                    <AssistantLayout />
                   </AudioProvider>
                 </ServiceProvider>
               }
             />
-            <Route path="/" element={<Navigate to="/app" replace />} />
-            <Route path="*" element={<Navigate to="/app" replace />} />
+            <Route path="/app" element={<Navigate to="/assistant" replace />} />
+            <Route path="/" element={<Navigate to="/assistant" replace />} />
+            <Route path="*" element={<Navigate to="/assistant" replace />} />
           </Routes>
         </AuthProvider>
-      </ToastProvider>
+      </NotificationProvider>
     </MemoryRouter>
   );
 }

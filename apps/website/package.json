@@ -1,6 +1,6 @@
 {
-  "name": "mira-website",
-  "version": "1.1.0",
+  "name": "dadei-website",
+  "version": "2.0.0",
   "author": {
     "name": "Ankur Desai",
     "email": "ardusa05@gmail.com",
@@ -15,7 +15,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@mira/ui": "*",
+    "@dadei/ui": "*",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "framer-motion": "^12.23.24",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
