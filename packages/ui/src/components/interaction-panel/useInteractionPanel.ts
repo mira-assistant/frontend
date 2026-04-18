@@ -37,6 +37,16 @@ export function useInteractionPanel() {
     });
   }, [conversationGroups]);
 
+  /** Only changes when interactions are added/removed/reordered — not on expand/collapse. */
+  const interactionsScrollSignature = useMemo(
+    () =>
+      conversationGroups
+        .flatMap(g => g.interactions)
+        .map(i => i.id)
+        .join('\u001f'),
+    [conversationGroups]
+  );
+
   const [armedInteractionDeleteId, setArmedInteractionDeleteId] = useState<string | null>(null);
   const [armedConversationDeleteId, setArmedConversationDeleteId] = useState<string | null>(null);
 
@@ -254,10 +264,9 @@ export function useInteractionPanel() {
   }, [conversationGroups, persons]);
 
   useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  }, [conversationGroups]);
+    if (!containerRef.current) return;
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
+  }, [interactionsScrollSignature]);
 
   const toggleConversation = (index: number) => {
     setConversationGroups(prev => {
