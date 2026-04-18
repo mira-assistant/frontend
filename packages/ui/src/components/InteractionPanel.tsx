@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Check, Trash2, X } from 'lucide-react';
 import { Interaction, Person, Conversation } from '@dadei/ui/types/models.types';
 import { personsApi } from '@dadei/ui/lib/api/persons';
@@ -112,6 +112,70 @@ interface ConversationGroupView extends ConversationGroupState {
 
 type SplitDeleteGroup = 'interaction' | 'conversation';
 
+const accordionEase = [0.22, 1, 0.36, 1] as const;
+
+function ConversationExpandedSummary({ group }: { group: ConversationGroupView }) {
+  const topic = group.conversation?.topic_summary?.trim();
+  const context = group.conversation?.context_summary?.trim();
+  if (!topic && !context) return null;
+  return (
+    <div className="border-b border-white/8 bg-zinc-950/40 px-4 py-3 font-secondary">
+      <p className="whitespace-normal text-pretty text-xs leading-relaxed text-zinc-500 wrap-anywhere">
+        {context}
+      </p>
+    </div>
+  );
+}
+
+function CollapsibleConversationBody({
+  expanded,
+  interactionKey,
+  prefersReducedMotion,
+  onInnerClick,
+  children,
+}: {
+  expanded: boolean;
+  interactionKey: string;
+  prefersReducedMotion: boolean;
+  onInnerClick: (e: React.MouseEvent) => void;
+  children: React.ReactNode;
+}) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const measure = () => setContentHeight(el.scrollHeight);
+    measure();
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(measure);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [interactionKey, expanded]);
+
+  const duration = prefersReducedMotion ? 0.01 : 0.34;
+
+  return (
+    <motion.div
+      initial={false}
+      animate={{ height: expanded ? contentHeight : 0 }}
+      transition={{ duration, ease: accordionEase }}
+      className="w-full min-w-0 overflow-hidden"
+      onClick={onInnerClick}
+    >
+      <div ref={innerRef} className="min-w-0" {...(!expanded ? { inert: true as const } : {})}>
+        <div className="w-full min-w-0 space-y-2 bg-zinc-950/50 p-4">{children}</div>
+      </div>
+    </motion.div>
+  );
+}
+
+/** Idle = single icon width only; armed grows so title/metadata flex in without a permanent gap. */
+const DELETE_SLOT_IDLE_PX = 36;
+const DELETE_SLOT_ARMED_PX = 76;
+
 function SplitDeleteToolbar({
   armed,
   onArm,
@@ -129,15 +193,22 @@ function SplitDeleteToolbar({
   idleTitle: string;
   idleAriaLabel: string;
 }) {
+  const reduceMotion = useReducedMotion();
   const hoverVisible =
     group === 'interaction'
       ? 'group-hover/interaction:opacity-100'
       : 'group-hover/conv:opacity-100';
 
   return (
-    <div
+    <motion.div
       data-split-delete
-      className="relative h-9 w-[4.75rem] shrink-0 self-center"
+      initial={false}
+      animate={{ width: armed ? DELETE_SLOT_ARMED_PX : DELETE_SLOT_IDLE_PX }}
+      transition={{
+        duration: reduceMotion ? 0.01 : 0.26,
+        ease: accordionEase,
+      }}
+      className="relative h-9 shrink-0 self-center overflow-hidden"
       onClick={e => e.stopPropagation()}
     >
       <AnimatePresence initial={false} mode="wait">
@@ -148,7 +219,7 @@ function SplitDeleteToolbar({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.09, ease: 'easeOut' }}
-            className="absolute inset-0 flex items-center justify-end gap-0.5"
+            className="flex h-full w-full items-center justify-end gap-1"
           >
             <button
               type="button"
@@ -189,13 +260,13 @@ function SplitDeleteToolbar({
               e.stopPropagation();
               onArm();
             }}
-            className={`absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-lg text-rose-400/90 opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-rose-950/70 hover:text-rose-100 ${hoverVisible}`}
+            className={`flex h-full w-full items-center justify-center rounded-lg text-rose-400/90 opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-rose-950/70 hover:text-rose-100 ${hoverVisible}`}
           >
             <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
           </motion.button>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }
 
@@ -203,6 +274,7 @@ export default function InteractionPanel() {
   const { isConnected } = useService();
   const containerRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
+  const prefersReducedMotion = useReducedMotion();
 
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupState[]>([]);
   const [persons, setPersons] = useState<Map<string, Person>>(new Map());
@@ -554,179 +626,168 @@ export default function InteractionPanel() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-none bg-zinc-950/30">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-zinc-950/40 px-6 py-6 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold text-zinc-100">Interactions</h2>
-          <button
-            onClick={handleClearAll}
-            disabled={conversationGroups.length === 0 || loading}
-            className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-4 py-2 text-sm font-medium text-emerald-300/95 transition-all duration-200 hover:border-emerald-500/45 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <i className="fas fa-trash" />
-            Clear All
-          </button>
-        </div>
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-white/[0.08] bg-zinc-950/40 px-6 py-6 backdrop-blur-sm">
+        <h2 className="text-xl font-semibold text-zinc-100">Interactions</h2>
+        <button
+          onClick={handleClearAll}
+          disabled={conversationGroups.length === 0 || loading}
+          className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/40 px-4 py-2 text-sm font-medium text-emerald-300/95 transition-all duration-200 hover:border-emerald-500/45 hover:bg-emerald-950/60 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <i className="fas fa-trash" />
+          Clear All
+        </button>
+      </div>
 
-        {/* Interaction List */}
-        <div ref={containerRef} className="flex-1 space-y-3 overflow-y-auto overscroll-none px-6 py-6">
-          {loading ? (
-            <div className="flex h-full items-center justify-center">
-              <i className="fas fa-spinner fa-spin text-3xl text-emerald-400/80" />
-            </div>
-          ) : displayGroups.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <i className="fas fa-robot mb-4 text-5xl text-zinc-600 opacity-50" />
-              <p className="mb-2 text-lg font-medium text-zinc-500">No conversations yet</p>
-              <small className="text-sm text-zinc-600 opacity-90 font-secondary">
-                Start speaking to interact with your AI assistant
-              </small>
-            </div>
-          ) : (
-            displayGroups.map((group, groupIndex) => (
-              <div key={group.conversation?.id || `orphan-${groupIndex}`} className="min-w-0 space-y-2">
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => toggleConversation(groupIndex)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      toggleConversation(groupIndex);
-                    }
-                  }}
-                  className="group/conv w-full min-w-0 max-w-full cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50 shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-                >
-                  <div className="flex w-full min-w-0 items-center gap-3 border-b border-white/[0.08] bg-zinc-900/60 p-4">
-                    <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      {/* Interaction List */}
+      <div
+        ref={containerRef}
+        className="flex-1 space-y-3 overflow-y-auto overscroll-none px-6 py-6 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:h-0 [&::-webkit-scrollbar]:w-0"
+      >
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <i className="fas fa-spinner fa-spin text-3xl text-emerald-400/80" />
+          </div>
+        ) : displayGroups.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center text-center">
+            <i className="fas fa-robot mb-4 text-5xl text-zinc-600 opacity-50" />
+            <p className="mb-2 text-lg font-medium text-zinc-500">No conversations yet</p>
+            <small className="text-sm text-zinc-600 opacity-90 font-secondary">
+              Start speaking to interact with your AI assistant
+            </small>
+          </div>
+        ) : (
+          displayGroups.map((group, groupIndex) => (
+            <div key={group.conversation?.id || `orphan-${groupIndex}`} className="min-w-0 space-y-2">
+              <div
+                role="button"
+                tabIndex={0}
+                aria-expanded={group.isExpanded}
+                onClick={() => toggleConversation(groupIndex)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleConversation(groupIndex);
+                  }
+                }}
+                className="group/conv w-full min-w-0 max-w-full cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-zinc-900/50 shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/35 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              >
+                <div className="flex w-full min-w-0 items-center gap-3 border-b border-white/[0.08] bg-zinc-900/60 p-4">
+                  <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                    <span
+                      className="flex h-5 w-5 shrink-0 items-center justify-center text-zinc-500 transition-colors group-hover/conv:text-emerald-400/90"
+                      aria-hidden
+                    >
+                      <i
+                        className={`fas fa-chevron-down text-xs leading-none transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${group.isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                      />
+                    </span>
+
+                    {group.isActive ? (
                       <span
-                        className="flex h-5 w-5 shrink-0 items-center justify-center text-zinc-500 transition-colors group-hover/conv:text-emerald-400/90"
+                        className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-400"
                         aria-hidden
-                      >
-                        <i
-                          className={`fas fa-chevron-${group.isExpanded ? 'down' : 'right'} text-xs leading-none`}
-                        />
-                      </span>
-
-                      {group.isActive ? (
-                        <span
-                          className="inline-block h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-400"
-                          aria-hidden
-                        />
-                      ) : null}
-
-                      <div className="min-w-0 flex-1 overflow-hidden py-0.5">
-                        <h3 className="text-sm font-semibold text-zinc-100">
-                          <span className="block truncate" title={getConversationTitle(group)}>
-                            {getConversationTitle(group)}
-                          </span>
-                        </h3>
-                        {group.isActive && group.conversation?.topic_summary ? (
-                          <p
-                            className="mt-0.5 truncate text-xs text-zinc-500 font-secondary"
-                            title={group.conversation.topic_summary}
-                          >
-                            {group.conversation.topic_summary}
-                          </p>
-                        ) : null}
-                        {group.conversation?.context_summary ? (
-                          <p
-                            className="mt-0.5 truncate text-xs text-zinc-500 font-secondary"
-                            title={group.conversation.context_summary}
-                          >
-                            {group.conversation.context_summary}
-                          </p>
-                        ) : null}
-                      </div>
-
-                      <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-xs text-zinc-500 font-secondary sm:flex-row sm:items-center sm:gap-4">
-                        <span className="flex items-center gap-1 whitespace-nowrap tabular-nums">
-                          <i className="fas fa-comment text-[11px] opacity-80" aria-hidden />
-                          {group.interactions.length}
-                        </span>
-                        <span className="whitespace-nowrap">
-                          {formatLocalDate(
-                            group.conversation?.started_at || group.interactions[0]?.timestamp
-                          )}
-                        </span>
-                      </div>
-                    </div>
-
-                    {group.conversation ? (
-                      <SplitDeleteToolbar
-                        group="conversation"
-                        armed={armedConversationDeleteId === group.conversation.id}
-                        onArm={() => {
-                          setArmedInteractionDeleteId(null);
-                          setArmedConversationDeleteId(group.conversation!.id);
-                        }}
-                        onDisarm={() => setArmedConversationDeleteId(null)}
-                        onConfirm={() => void handleDeleteConversation(group.conversation!.id)}
-                        idleTitle="Delete conversation"
-                        idleAriaLabel="Delete conversation"
                       />
                     ) : null}
-                  </div>
 
-                  {/* No CSS transition on grid rows — animated 0fr/1fr caused intermittent width/height glitches. */}
-                  <div
-                    className={`grid w-full min-w-0 ${group.isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <div className="min-h-0 overflow-hidden" inert={!group.isExpanded}>
-                      <div className="w-full min-w-0 space-y-2 bg-zinc-950/50 p-4">
-                        {group.interactions.map(interaction => {
-                          const person = getPersonDisplay(interaction.person_id);
-                          const colors = getPersonColor(person.index);
+                    <div className="min-w-0 flex-1 overflow-hidden py-0.5">
+                      <h3 className="text-sm font-semibold text-zinc-100">
+                        <span className="block truncate" title={getConversationTitle(group)}>
+                          {getConversationTitle(group)}
+                        </span>
+                      </h3>
+                    </div>
 
-                          return (
-                            <div
-                              key={interaction.id}
-                              className="group/interaction overflow-hidden rounded-lg border border-white/10 bg-zinc-900/70 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm"
-                            >
-                              <div className="flex items-center gap-3 p-3">
-                                <div
-                                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                                  style={{ backgroundColor: colors.border }}
-                                >
-                                  {person.label[0].toUpperCase()}
-                                </div>
-
-                                <div className="min-w-0 flex-1 self-center py-0.5">
-                                  <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-secondary">
-                                    <span className="text-xs font-semibold" style={{ color: colors.text }}>
-                                      {person.label}
-                                    </span>
-                                    <span className="text-[10px] tabular-nums text-zinc-500">
-                                      {formatLocalTime(interaction.timestamp)}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm leading-relaxed text-zinc-200">{interaction.text}</p>
-                                </div>
-
-                                <SplitDeleteToolbar
-                                  group="interaction"
-                                  armed={armedInteractionDeleteId === interaction.id}
-                                  onArm={() => {
-                                    setArmedConversationDeleteId(null);
-                                    setArmedInteractionDeleteId(interaction.id);
-                                  }}
-                                  onDisarm={() => setArmedInteractionDeleteId(null)}
-                                  onConfirm={() => void handleDeleteInteraction(interaction.id)}
-                                  idleTitle="Delete interaction"
-                                  idleAriaLabel="Delete interaction"
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 pl-5 text-xs text-zinc-500 font-secondary sm:flex-row sm:items-center sm:gap-4">
+                      <span className="flex items-center gap-1 whitespace-nowrap tabular-nums">
+                        <i className="fas fa-comment text-[11px] opacity-80" aria-hidden />
+                        {group.interactions.length}
+                      </span>
+                      <span className="whitespace-nowrap">
+                        {formatLocalDate(
+                          group.conversation?.started_at || group.interactions[0]?.timestamp
+                        )}
+                      </span>
                     </div>
                   </div>
+
+                  {group.conversation ? (
+                    <SplitDeleteToolbar
+                      group="conversation"
+                      armed={armedConversationDeleteId === group.conversation.id}
+                      onArm={() => {
+                        setArmedInteractionDeleteId(null);
+                        setArmedConversationDeleteId(group.conversation!.id);
+                      }}
+                      onDisarm={() => setArmedConversationDeleteId(null)}
+                      onConfirm={() => void handleDeleteConversation(group.conversation!.id)}
+                      idleTitle="Delete conversation"
+                      idleAriaLabel="Delete conversation"
+                    />
+                  ) : null}
                 </div>
+
+                <ConversationExpandedSummary group={group} />
+
+                <CollapsibleConversationBody
+                  expanded={group.isExpanded}
+                  interactionKey={`${group.interactions.map(i => i.id).join('\u037e')}|${group.conversation?.topic_summary ?? ''}|${group.conversation?.context_summary ?? ''}`}
+                  prefersReducedMotion={!!prefersReducedMotion}
+                  onInnerClick={e => e.stopPropagation()}
+                >
+                  {group.interactions.map(interaction => {
+                    const person = getPersonDisplay(interaction.person_id);
+                    const colors = getPersonColor(person.index);
+
+                    return (
+                      <div
+                        key={interaction.id}
+                        className="group/interaction overflow-hidden rounded-lg border border-white/10 bg-zinc-900/70 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm"
+                      >
+                        <div className="flex min-w-0 items-center gap-3 p-3">
+                          <div
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                            style={{ backgroundColor: colors.border }}
+                          >
+                            {person.label[0].toUpperCase()}
+                          </div>
+
+                          <div className="min-w-0 flex-1 self-center py-0.5">
+                            <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-secondary">
+                              <span className="text-xs font-semibold" style={{ color: colors.text }}>
+                                {person.label}
+                              </span>
+                              <span className="text-[10px] tabular-nums text-zinc-500">
+                                {formatLocalTime(interaction.timestamp)}
+                              </span>
+                            </div>
+                            <p className="break-words text-sm leading-relaxed text-zinc-200 [overflow-wrap:anywhere]">
+                              {interaction.text}
+                            </p>
+                          </div>
+
+                          <SplitDeleteToolbar
+                            group="interaction"
+                            armed={armedInteractionDeleteId === interaction.id}
+                            onArm={() => {
+                              setArmedConversationDeleteId(null);
+                              setArmedInteractionDeleteId(interaction.id);
+                            }}
+                            onDisarm={() => setArmedInteractionDeleteId(null)}
+                            onConfirm={() => void handleDeleteInteraction(interaction.id)}
+                            idleTitle="Delete interaction"
+                            idleAriaLabel="Delete interaction"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CollapsibleConversationBody>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          ))
+        )}
       </div>
+    </div>
   );
 }
