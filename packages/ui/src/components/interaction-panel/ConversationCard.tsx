@@ -12,18 +12,9 @@ function ConversationExpandedSummary({ group }: { group: ConversationGroupView }
   if (!topic && !context) return null;
   return (
     <div className="border-b border-white/8 bg-zinc-950/40 px-4 py-3 font-secondary">
-      {topic ? (
-        <p className="whitespace-normal text-pretty text-xs leading-relaxed text-zinc-400 wrap-anywhere">
-          {topic}
-        </p>
-      ) : null}
-      {context ? (
-        <p
-          className={`whitespace-normal text-pretty text-xs leading-relaxed text-zinc-500 wrap-anywhere ${topic ? 'mt-2.5' : ''}`}
-        >
-          {context}
-        </p>
-      ) : null}
+      <p className="whitespace-normal text-pretty text-xs leading-relaxed text-zinc-500 wrap-anywhere">
+        {context}
+      </p>
     </div>
   );
 }
