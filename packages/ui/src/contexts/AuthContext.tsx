@@ -1,5 +1,5 @@
 
-import { createContext, useCallback, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { api } from '@dadei/ui/shared/api/client';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
@@ -293,4 +293,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
 }

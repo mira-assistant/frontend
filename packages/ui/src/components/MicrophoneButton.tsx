@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useService } from '@dadei/ui/hooks/useService';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { cn } from '@dadei/ui/lib/cn';
 
 interface MicrophoneButtonProps {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 
 /**

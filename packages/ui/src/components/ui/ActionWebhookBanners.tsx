@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import type { ActionWebhookPayload } from '@dadei/ui/types/electron';
 import { subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
-import { useNotification } from '@dadei/ui/contexts/NotificationContext';
+import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 
 function titleCaseActionType(actionType: string): string {
   return actionType
@@ -14,11 +14,11 @@ function titleCaseActionType(actionType: string): string {
 const AUTO_DISMISS_MS = 14_000;
 
 /**
- * Subscribes to realtime "action" events and surfaces them as teardrop notifications.
- * Renders no UI — host lives in NotificationProvider.
+ * Subscribes to realtime "action" events and surfaces them as the assistant notification banner.
+ * Renders no UI — banner is shown via NotificationBannerSlot in AssistantLayout.
  */
 export default function ActionWebhookBanners() {
-  const { pushNotification } = useNotification();
+  const { showBanner } = useNotifications();
 
   const pushActionPayload = useCallback(
     (raw: unknown) => {
@@ -32,9 +32,9 @@ export default function ActionWebhookBanners() {
       const data = raw as ActionWebhookPayload;
       const title = `${titleCaseActionType(data.action_type)} · ${data.status}`;
       const body = data.details?.trim() || undefined;
-      pushNotification({ title, body, durationMs: AUTO_DISMISS_MS });
+      showBanner({ title, body, durationMs: AUTO_DISMISS_MS });
     },
-    [pushNotification]
+    [showBanner]
   );
 
   useEffect(() => {

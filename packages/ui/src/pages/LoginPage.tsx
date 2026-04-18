@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import LoginOverlay from '@dadei/ui/components/LoginModal';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
+import LoginOverlay from '@dadei/ui/components/modals/LoginModal';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 
 function isSafeInternalPath(path: string): boolean {

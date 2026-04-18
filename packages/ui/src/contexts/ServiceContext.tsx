@@ -1,7 +1,7 @@
 
-import { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
-import { useToast } from '@dadei/ui/contexts/ToastContext';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
 import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
@@ -31,7 +31,7 @@ function readInitialClientName(): string {
 
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
-  const { showToast } = useToast();
+  const { showToast } = useNotifications();
   const getAccessTokenRef = useRef(getAccessToken);
   getAccessTokenRef.current = getAccessToken;
 
@@ -258,4 +258,12 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ServiceContext.Provider>
   );
+}
+
+export function useService() {
+  const context = useContext(ServiceContext);
+  if (context === undefined) {
+    throw new Error('useService must be used within a ServiceProvider');
+  }
+  return context;
 }

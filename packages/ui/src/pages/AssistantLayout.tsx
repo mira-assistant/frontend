@@ -1,22 +1,20 @@
 import { useState, type CSSProperties } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
-import { useToast } from '@dadei/ui/contexts/ToastContext';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
 import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
 import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
-import InteractionPanel from '@dadei/ui/components/InteractionPanel';
-import Toast from '@dadei/ui/components/ui/Toast';
-import AssistantSettingsModal from '@dadei/ui/components/SettingsModal';
+import InteractionPanel from '@dadei/ui/components/interaction-panel';
+import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 
 /**
- * Authenticated assistant shell: layout, theme tokens, overlays (settings), toasts, and realtime hooks.
+ * Authenticated assistant shell: layout, theme tokens, overlays (settings), and realtime hooks.
  */
 export default function AssistantLayout() {
   const { isAuthenticated, isLoading } = useAuth();
-  const { toasts, removeToast } = useToast();
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
@@ -58,7 +56,7 @@ export default function AssistantLayout() {
           ['--assistant-accent' as string]: 'rgb(52 211 153)',
           ['--assistant-accent-muted' as string]: 'rgb(6 95 70)',
           ['--assistant-surface' as string]: 'rgba(24 24 27 / 0.72)',
-          ['--assistant-border' as string]: 'rgba(255 255 255 / 0.08)',
+          ['--assistant-border' as string]: 'rgba(255, 255, 255, 0.08)',
           ['--assistant-header-h' as string]: '4.75rem',
         } as CSSProperties
       }
@@ -84,13 +82,16 @@ export default function AssistantLayout() {
         {/* z-0 so header (z-20) stacks above this column; fixed tooltips in header are not covered */}
         <main className="relative z-0 flex min-h-0 flex-1 overflow-hidden overscroll-none">
           <div
-            className="flex flex-1 items-center justify-center px-10 py-10"
+            className="flex min-h-0 flex-1 flex-col px-10 pt-6 pb-10"
             style={{
               background:
                 'linear-gradient(145deg, rgba(24,24,27,0.35) 0%, rgba(9,9,11,0.55) 100%)',
             }}
           >
-            <MicrophoneButton disableSpaceToggle={isPeoplePanelOpen} />
+            <NotificationBannerSlot />
+            <div className="flex min-h-0 flex-1 items-center justify-center">
+              <MicrophoneButton disableSpaceToggle={isPeoplePanelOpen} />
+            </div>
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col border-l border-white/[0.07] bg-zinc-950/40 backdrop-blur-sm">
@@ -100,18 +101,6 @@ export default function AssistantLayout() {
       </div>
 
       <AssistantSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-
-      <div className="pointer-events-none fixed bottom-5 right-5 z-[180] flex max-w-sm flex-col-reverse gap-2">
-        {toasts.map((toast) => (
-          <div key={toast.id} className="pointer-events-auto">
-            <Toast
-              message={toast.message}
-              type={toast.type}
-              onClose={() => removeToast(toast.id)}
-            />
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

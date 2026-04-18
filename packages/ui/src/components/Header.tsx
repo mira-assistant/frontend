@@ -2,8 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings2, LogOut, Users } from 'lucide-react';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
-import { useService } from '@dadei/ui/hooks/useService';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
 import Tooltip from '@dadei/ui/components/ui/Tooltip';
 import PeoplePanel from '@dadei/ui/components/PeoplePanel';

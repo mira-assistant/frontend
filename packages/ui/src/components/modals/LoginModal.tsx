@@ -1,11 +1,11 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import { buildWebGoogleOAuthLoginUrl } from '@dadei/ui/lib/webOAuthUrls';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
-import logoUrl from '../assets/logo.png';
+import logoUrl from '../../assets/logo.png';
 
 const veilEase = [0.22, 1, 0.36, 1] as const;
 

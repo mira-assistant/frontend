@@ -2,9 +2,9 @@ import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { LogOut, Trash2, X } from 'lucide-react';
-import { useAuth } from '@dadei/ui/hooks/useAuth';
+import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { authApi } from '@dadei/ui/lib/api/auth';
-import { useToast } from '@dadei/ui/contexts/ToastContext';
+import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 
 type AssistantSettingsModalProps = {
   open: boolean;
@@ -13,7 +13,7 @@ type AssistantSettingsModalProps = {
 
 export default function AssistantSettingsModal({ open, onOpenChange }: AssistantSettingsModalProps) {
   const { user, refreshUser, logout } = useAuth();
-  const { showToast } = useToast();
+  const { showToast } = useNotifications();
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);

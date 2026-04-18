@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { personsApi } from '@dadei/ui/lib/api/persons';
 import { Person } from '@dadei/ui/types/models.types';
-import { useToast } from '@dadei/ui/contexts/ToastContext';
+import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { cn } from '@dadei/ui/lib/cn';
 import { Check, Trash2, X } from 'lucide-react';
 
@@ -17,7 +17,7 @@ interface PeoplePanelProps {
 }
 
 export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeoplePanelProps) {
-  const { showToast } = useToast();
+  const { showToast } = useNotifications();
   const panelRef = useRef<HTMLDivElement>(null);
 
   const [persons, setPersons] = useState<Person[]>([]);

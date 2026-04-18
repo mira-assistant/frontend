@@ -1,8 +1,8 @@
 
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useMicVAD } from '@ricky0123/vad-react';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
-import { useService } from '@dadei/ui/hooks/useService';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
 
 interface AudioContextType {
   isProcessing: boolean;
@@ -176,4 +176,12 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AudioContext.Provider>
   );
+}
+
+export function useAudio() {
+  const context = useContext(AudioContext);
+  if (!context) {
+    throw new Error('useAudio must be used within AudioProvider');
+  }
+  return context;
 }
