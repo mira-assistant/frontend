@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { personsApi } from '@dadei/ui/lib/api/persons';
 import { Person } from '@dadei/ui/types/models.types';
 import { useToast } from '@dadei/ui/contexts/ToastContext';
-import Modal from '@dadei/ui/components/ui/Modal';
+import { cn } from '@dadei/ui/lib/cn';
+import { Check, Trash2, X } from 'lucide-react';
 
 /** Below client tooltip (195); above main chrome. */
 const PEOPLE_DRAWER_Z = 170;
@@ -23,8 +24,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [personToDelete, setPersonToDelete] = useState<string | null>(null);
+  const [armedPersonDeleteId, setArmedPersonDeleteId] = useState<string | null>(null);
 
   // Load persons when panel opens
   useEffect(() => {
@@ -63,25 +63,36 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
     }
   };
 
-  const confirmDelete = (personId: string) => {
-    setPersonToDelete(personId);
-    setDeleteModalOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!personToDelete) return;
-
+  const handleDeletePerson = async (personId: string) => {
     try {
-      await personsApi.delete(personToDelete);
-      setPersons(prev => prev.filter(p => p.id !== personToDelete));
+      await personsApi.delete(personId);
+      setPersons(prev => prev.filter(p => p.id !== personId));
       showToast('Person deleted successfully', 'success');
+      setArmedPersonDeleteId(null);
     } catch (error) {
       console.error('Failed to delete person:', error);
       showToast('Failed to delete person', 'error');
-    } finally {
-      setPersonToDelete(null);
+      setArmedPersonDeleteId(null);
     }
   };
+
+  useEffect(() => {
+    if (!armedPersonDeleteId) return;
+    const onDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.closest('[data-split-delete]')) return;
+      setArmedPersonDeleteId(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setArmedPersonDeleteId(null);
+    };
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [armedPersonDeleteId]);
 
   const startEdit = (person: Person) => {
     setEditingId(person.id);
@@ -170,7 +181,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <i className="fas fa-user-friends mb-3 text-4xl text-zinc-600 opacity-40" />
                   <p className="text-sm font-medium text-zinc-400">No people yet</p>
-                  <p className="mt-1 text-xs text-zinc-600">People will appear as they speak</p>
+                  <p className="mt-1 text-xs text-zinc-600 font-secondary">People will appear as they speak</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -180,7 +191,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                     return (
                       <div
                         key={person.id}
-                        className="group rounded-lg border border-white/10 bg-zinc-900/70 p-3 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm"
+                        className="group/person rounded-lg border border-white/10 bg-zinc-900/70 p-3 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm"
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-950/60 text-sm font-semibold text-emerald-300">
@@ -194,21 +205,28 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                                 value={editName}
                                 onChange={(e) => setEditName(e.target.value)}
                                 onKeyDown={(e) => handleNameKeyDown(e, person.id)}
-                                className="w-full rounded-md border border-emerald-500/35 bg-zinc-950/80 px-2 py-1 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                                className="w-full rounded-md border border-emerald-500/35 bg-zinc-950/80 px-2 py-1 font-sans text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
                                 autoFocus
                                 placeholder="Enter name"
                               />
                             ) : (
                               <div>
-                                <h3 className="truncate text-sm font-medium text-zinc-100">
+                                <h3 className="truncate text-sm font-medium text-zinc-100 font-secondary">
                                   {person.name || `Person ${person.index}`}
                                 </h3>
-                                <p className="text-xs text-zinc-500">ID: {person.index}</p>
+                                <p className="text-xs text-zinc-500 font-secondary">ID: {person.index}</p>
                               </div>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div
+                            className={cn(
+                              'flex items-center gap-1 transition-opacity',
+                              armedPersonDeleteId === person.id
+                                ? 'opacity-100'
+                                : 'opacity-0 group-hover/person:opacity-100'
+                            )}
+                          >
                             {isEditing ? (
                               <>
                                 <button
@@ -235,13 +253,67 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                                 >
                                   <i className="fas fa-pencil-alt text-xs" />
                                 </button>
-                                <button
-                                  onClick={() => confirmDelete(person.id)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-md text-rose-400/90 transition-colors hover:bg-rose-950/50"
-                                  title="Delete"
+                                <div
+                                  data-split-delete
+                                  className="flex shrink-0 items-center"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <i className="fas fa-trash text-xs" />
-                                </button>
+                                  <AnimatePresence mode="wait" initial={false}>
+                                    {armedPersonDeleteId === person.id ? (
+                                      <motion.div
+                                        key="person-del-armed"
+                                        initial={{ opacity: 0, x: 6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 4 }}
+                                        transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                        className="flex items-center gap-0.5"
+                                      >
+                                        <button
+                                          type="button"
+                                          aria-label="Confirm delete person"
+                                          title="Confirm delete"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            void handleDeletePerson(person.id);
+                                          }}
+                                          className="flex h-7 w-7 items-center justify-center rounded-md text-emerald-400/95 transition-colors hover:bg-emerald-500/15"
+                                        >
+                                          <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          aria-label="Cancel"
+                                          title="Cancel"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            setArmedPersonDeleteId(null);
+                                          }}
+                                          className="flex h-7 w-7 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
+                                        >
+                                          <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                        </button>
+                                      </motion.div>
+                                    ) : (
+                                      <motion.button
+                                        key="person-del-idle"
+                                        type="button"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.12 }}
+                                        title="Delete person"
+                                        aria-label="Delete person"
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          setArmedPersonDeleteId(person.id);
+                                        }}
+                                        className="flex h-7 w-7 items-center justify-center rounded-md text-rose-400/90 transition-colors hover:bg-rose-950/35"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                                      </motion.button>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
                               </>
                             )}
                           </div>
@@ -256,16 +328,6 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
         )}
       </AnimatePresence>
 
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        title="Delete Person"
-        message="Are you sure you want to delete this person? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        variant="danger"
-      />
     </>
   );
 

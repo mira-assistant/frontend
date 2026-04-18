@@ -10,7 +10,7 @@ import logoUrl from '../../assets/logo.png';
 const veilEase = [0.22, 1, 0.36, 1] as const;
 
 const glassInput =
-  'w-full rounded-xl border border-white/10 bg-zinc-900/55 px-3.5 py-2.5 text-sm text-zinc-100 shadow-inner shadow-black/30 placeholder:text-zinc-500 backdrop-blur-md transition-[border-color,background-color,box-shadow,opacity] duration-200 focus:border-emerald-500/45 focus:bg-zinc-900/75 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40';
+  'w-full rounded-xl border border-white/10 bg-zinc-900/55 px-3.5 py-2.5 font-sans text-sm text-zinc-100 shadow-inner shadow-black/30 placeholder:text-zinc-500 backdrop-blur-md transition-[border-color,background-color,box-shadow,opacity] duration-200 focus:border-emerald-500/45 focus:bg-zinc-900/75 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40';
 
 type AuthLoginCardProps = {
   onAuthenticated?: () => void;
@@ -128,8 +128,10 @@ export default function AuthLoginCard({
         <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-emerald-500/30 bg-zinc-950/60 shadow-[0_8px_32px_rgba(16,185,129,0.12)]">
           <img src={logoUrl} alt="" className="h-full w-full object-cover" />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Welcome to Dadei</h1>
-        <p className="mt-2 text-sm text-zinc-500">Sign in to your intelligent voice workspace</p>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 font-brand">Welcome to Dadei</h1>
+        <p className="mt-2 text-sm text-zinc-500 font-secondary">
+          Sign in to your intelligent voice workspace
+        </p>
       </div>
 
       <div className="relative">
@@ -153,7 +155,10 @@ export default function AuthLoginCard({
               className="space-y-4"
             >
               <div>
-                <label htmlFor="auth-email" className="mb-1.5 block text-xs font-medium text-zinc-400">
+                <label
+                  htmlFor="auth-email"
+                  className="mb-1.5 block text-xs font-medium text-zinc-400 font-secondary"
+                >
                   Email
                 </label>
                 <input
@@ -170,7 +175,10 @@ export default function AuthLoginCard({
               </div>
 
               <div>
-                <label htmlFor="auth-password" className="mb-1.5 block text-xs font-medium text-zinc-400">
+                <label
+                  htmlFor="auth-password"
+                  className="mb-1.5 block text-xs font-medium text-zinc-400 font-secondary"
+                >
                   Password
                 </label>
                 <input
@@ -195,7 +203,10 @@ export default function AuthLoginCard({
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <label htmlFor="auth-confirm" className="mb-1.5 block text-xs font-medium text-zinc-400">
+                    <label
+                      htmlFor="auth-confirm"
+                      className="mb-1.5 block text-xs font-medium text-zinc-400 font-secondary"
+                    >
                       Confirm password
                     </label>
                     <input
@@ -250,7 +261,7 @@ export default function AuthLoginCard({
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm text-zinc-500">
+        <p className="mt-6 text-center text-sm text-zinc-500 font-secondary">
           {isLoginMode ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button
             type="button"
@@ -259,7 +270,7 @@ export default function AuthLoginCard({
               setError('');
             }}
             disabled={loading}
-            className="font-semibold text-emerald-400/95 transition-colors hover:text-emerald-300 disabled:opacity-50"
+            className="font-sans font-semibold text-emerald-400/95 transition-colors hover:text-emerald-300 disabled:opacity-50"
           >
             {isLoginMode ? 'Create one' : 'Sign In'}
           </button>
@@ -270,7 +281,7 @@ export default function AuthLoginCard({
             <div className="w-full border-t border-white/10" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="rounded-full border border-white/10 bg-zinc-950/60 px-3 py-1 font-medium text-zinc-500 shadow-sm backdrop-blur-md">
+            <span className="rounded-full border border-white/10 bg-zinc-950/60 px-3 py-1 font-medium text-zinc-500 shadow-sm backdrop-blur-md font-secondary">
               Or continue with
             </span>
           </div>

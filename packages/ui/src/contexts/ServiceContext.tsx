@@ -22,6 +22,13 @@ export const ServiceContext = createContext<ServiceContextType | undefined>(unde
 
 const ENABLE_TIMEOUT_MS = 5000;
 
+function readInitialClientName(): string {
+  if (typeof window === 'undefined' || window.electronAPI) {
+    return 'web-client';
+  }
+  return getStoredClientName() || 'web-client';
+}
+
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
   const { showToast } = useToast();
@@ -30,7 +37,11 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
 
   const [isServiceEnabled, setIsServiceEnabled] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [clientName, setClientName] = useState('web-client');
+  const [clientName, setClientName] = useState(readInitialClientName);
+  /** Electron resolves the persisted name asynchronously; never register until this is true. */
+  const [isClientIdentityReady, setIsClientIdentityReady] = useState(
+    () => typeof window === 'undefined' || !window.electronAPI
+  );
   const [isTogglingService, setIsTogglingService] = useState(false);
   const [registrationConflict, setRegistrationConflict] = useState(false);
 
@@ -38,18 +49,27 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const isRegisteredRef = useRef(false);
 
   useEffect(() => {
-    const initialize = async () => {
-      if (window.electronAPI) {
-        const result = await window.electronAPI.getClientName();
+    if (!window.electronAPI) return;
+
+    let cancelled = false;
+    void window.electronAPI
+      .getClientName()
+      .then((result) => {
+        if (cancelled) return;
         if (result.success && result.clientName) {
           setClientName(result.clientName);
         }
-      } else {
-        const saved = getStoredClientName();
-        if (saved) setClientName(saved);
-      }
+      })
+      .catch(() => {
+        /* keep default client name */
+      })
+      .finally(() => {
+        if (!cancelled) setIsClientIdentityReady(true);
+      });
+
+    return () => {
+      cancelled = true;
     };
-    initialize();
   }, []);
 
   useEffect(() => {
@@ -72,6 +92,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     }
 
     const registerClient = async () => {
+      if (!isClientIdentityReady) return;
       if (!clientName) return;
       if (isRegisteredRef.current) return;
 
@@ -108,7 +129,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     };
 
     registerClient();
-  }, [clientName, isAuthenticated, isAuthLoading]);
+  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady]);
 
   useEffect(() => {
     if (!isAuthenticated || !isConnected) return;

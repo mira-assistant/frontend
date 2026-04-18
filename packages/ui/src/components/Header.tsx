@@ -197,13 +197,16 @@ export default function Header({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-emerald-400/95">
           <img src={logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10" />
-          <span className="hidden sm:inline">dadei</span>
+          <span className="hidden font-brand sm:inline">dadei</span>
         </div>
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-2">
-          <label htmlFor="clientName" className="hidden text-sm font-semibold text-emerald-500/90 sm:inline">
+          <label
+            htmlFor="clientName"
+            className="hidden text-sm font-semibold text-emerald-500/90 sm:inline font-secondary"
+          >
             Client
           </label>
           <Tooltip
@@ -223,7 +226,7 @@ export default function Header({
                 maxLength={50}
                 placeholder="web-client"
                 className={cn(
-                  'w-[120px] rounded-xl border-2 bg-zinc-900/80 px-2.5 py-1.5 text-center text-sm text-zinc-100 shadow-inner shadow-black/20 transition-all duration-300 placeholder:text-zinc-600 focus:bg-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-[140px]',
+                  'w-[120px] rounded-xl border-2 bg-zinc-900/80 px-2.5 py-1.5 text-center font-sans text-sm text-zinc-100 shadow-inner shadow-black/20 transition-all duration-300 placeholder:text-zinc-600 focus:bg-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-[140px]',
                   getBorderColor()
                 )}
               />

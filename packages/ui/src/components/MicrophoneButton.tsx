@@ -166,7 +166,7 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute bottom-20 flex items-center gap-2 text-sm text-zinc-500"
+        className="absolute bottom-20 flex items-center gap-2 text-sm text-zinc-500 font-secondary"
       >
         <kbd className="rounded-md border border-white/10 bg-zinc-900/80 px-4 py-1 font-mono text-base text-zinc-300 shadow-inner shadow-black/40">
           Space

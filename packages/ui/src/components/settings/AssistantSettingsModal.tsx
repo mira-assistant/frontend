@@ -60,7 +60,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
               <Dialog.Title className="text-lg font-semibold tracking-tight text-zinc-50">
                 Settings
               </Dialog.Title>
-              <p className="mt-1 text-sm text-zinc-500">Account and data</p>
+              <p className="mt-1 text-sm text-zinc-500 font-secondary">Account and data</p>
             </div>
             <Dialog.Close asChild>
               <button
@@ -75,24 +75,28 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
 
           <div className="max-h-[calc(min(90dvh,52rem)-8rem)] space-y-6 overflow-y-auto overscroll-none pr-1">
             <section className="rounded-xl border border-white/10 bg-zinc-950/50 p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Account</h3>
-              <p className="mt-2 text-sm text-zinc-400">Email</p>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 font-secondary">
+                Account
+              </h3>
+              <p className="mt-2 text-sm text-zinc-400 font-secondary">Email</p>
               <p className="mt-0.5 font-medium text-zinc-100">{email}</p>
               {user?.has_password === false ? (
-                <p className="mt-2 text-xs text-zinc-500">Signed in with Google — no password on file.</p>
+                <p className="mt-2 text-xs text-zinc-500 font-secondary">
+                  Signed in with Google — no password on file.
+                </p>
               ) : null}
               <button
                 type="button"
                 onClick={() => void refreshUser()}
-                className="mt-3 text-xs font-medium text-emerald-400/90 hover:text-emerald-300"
+                className="mt-3 text-xs font-medium text-emerald-400/90 hover:text-emerald-300 font-secondary"
               >
                 Refresh profile
               </button>
             </section>
 
             <section className="rounded-xl border border-white/10 bg-zinc-950/50 p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Data</h3>
-              <p className="mt-2 text-sm text-zinc-500">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 font-secondary">Data</h3>
+              <p className="mt-2 text-sm text-zinc-500 font-secondary">
                 Export and privacy controls will connect here when available.
               </p>
             </section>
@@ -126,7 +130,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
             <AlertDialog.Title className="text-base font-semibold text-zinc-50">
               Delete account?
             </AlertDialog.Title>
-            <AlertDialog.Description className="mt-2 text-sm text-zinc-400">
+            <AlertDialog.Description className="mt-2 text-sm text-zinc-400 font-secondary">
               This permanently removes your network and related data. Type your email{' '}
               <span className="font-medium text-zinc-300">{email}</span> to confirm.
             </AlertDialog.Description>
@@ -135,7 +139,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
               value={deletePhrase}
               onChange={(e) => setDeletePhrase(e.target.value)}
               placeholder="Your email"
-              className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
+              className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2 font-sans text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
               autoComplete="off"
             />
             <div className="mt-6 flex justify-end gap-3">

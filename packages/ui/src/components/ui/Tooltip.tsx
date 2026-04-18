@@ -77,7 +77,7 @@ export default function Tooltip({
             exit={{ opacity: 0, y: position === 'bottom' ? -10 : 10 }}
             transition={{ duration: 0.15 }}
             className={cn(
-              'fixed px-3 py-1.5 text-xs font-medium shadow-lg',
+              'fixed px-3 py-1.5 text-xs font-medium shadow-lg font-secondary',
               '-translate-x-1/2 whitespace-nowrap rounded-lg',
               variantStyles[variant]
             )}

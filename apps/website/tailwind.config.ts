@@ -10,10 +10,14 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Montserrat', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        poppins: ['Poppins', 'Montserrat', 'sans-serif'],
-        inter: ['Inter', 'sans-serif'],
-        display: ['"Instrument Serif"', 'Georgia', 'serif'],
+        /** Montserrat — interaction copy, headings, UI body */
+        sans: ['Montserrat', 'system-ui', 'sans-serif'],
+        /** Inter — metadata, labels, hints */
+        secondary: ['Inter', 'system-ui', 'sans-serif'],
+        /** Orbitron — wordmark and marketing-style titles */
+        brand: ['Orbitron', 'system-ui', 'sans-serif'],
+        /** Large landing/marketing display */
+        display: ['Orbitron', 'system-ui', 'sans-serif'],
       },
     },
   },

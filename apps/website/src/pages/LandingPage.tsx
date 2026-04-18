@@ -115,7 +115,10 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-[#00a855]">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-lg font-semibold text-[#00a855] font-brand"
+          >
             <i className="fas fa-microphone-alt" aria-hidden />
             Dadei
           </Link>
@@ -438,8 +441,8 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-5 sm:flex-row sm:px-8">
           <div className="flex items-center gap-2 text-slate-600">
             <i className="fas fa-microphone-alt text-[#00a855]" aria-hidden />
-            <span className="font-semibold text-slate-800">Dadei</span>
-            <span className="text-sm text-slate-500">© {new Date().getFullYear()}</span>
+            <span className="font-semibold text-slate-800 font-brand">Dadei</span>
+            <span className="text-sm text-slate-500 font-secondary">© {new Date().getFullYear()}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-slate-600">
             <Link to="/assistant" className="hover:text-slate-900">

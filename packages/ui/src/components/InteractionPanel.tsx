@@ -1,5 +1,6 @@
-
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, Trash2, X } from 'lucide-react';
 import { Interaction, Person, Conversation } from '@dadei/ui/types/models.types';
 import { personsApi } from '@dadei/ui/lib/api/persons';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
@@ -129,9 +130,26 @@ export default function InteractionPanel() {
     });
   }, [conversationGroups]);
 
-  // Delete modals
-  const [deleteInteractionModal, setDeleteInteractionModal] = useState<string | null>(null);
+  const [armedInteractionDeleteId, setArmedInteractionDeleteId] = useState<string | null>(null);
   const [deleteConversationModal, setDeleteConversationModal] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!armedInteractionDeleteId) return;
+    const onDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement;
+      if (el.closest('[data-split-delete]')) return;
+      setArmedInteractionDeleteId(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setArmedInteractionDeleteId(null);
+    };
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [armedInteractionDeleteId]);
 
   const greenShades = [
     { background: '#f0fffa', border: '#00ff88', text: '#00cc6a' },
@@ -371,9 +389,11 @@ export default function InteractionPanel() {
       );
 
       showToast('Interaction deleted', 'success');
+      setArmedInteractionDeleteId(null);
     } catch (error) {
       console.error('Failed to delete interaction:', error);
       showToast('Failed to delete interaction', 'error');
+      setArmedInteractionDeleteId(null);
     }
   };
 
@@ -461,7 +481,7 @@ export default function InteractionPanel() {
             <div className="flex h-full flex-col items-center justify-center text-center">
               <i className="fas fa-robot mb-4 text-5xl text-zinc-600 opacity-50" />
               <p className="mb-2 text-lg font-medium text-zinc-500">No conversations yet</p>
-              <small className="text-sm text-zinc-600 opacity-90">
+              <small className="text-sm text-zinc-600 opacity-90 font-secondary">
                 Start speaking to interact with your AI assistant
               </small>
             </div>
@@ -506,7 +526,7 @@ export default function InteractionPanel() {
                         </h3>
                         {group.isActive && group.conversation?.topic_summary ? (
                           <p
-                            className="mt-0.5 truncate text-xs text-zinc-500"
+                            className="mt-0.5 truncate text-xs text-zinc-500 font-secondary"
                             title={group.conversation.topic_summary}
                           >
                             {group.conversation.topic_summary}
@@ -514,7 +534,7 @@ export default function InteractionPanel() {
                         ) : null}
                         {group.conversation?.context_summary ? (
                           <p
-                            className="mt-0.5 truncate text-xs text-zinc-500"
+                            className="mt-0.5 truncate text-xs text-zinc-500 font-secondary"
                             title={group.conversation.context_summary}
                           >
                             {group.conversation.context_summary}
@@ -522,7 +542,7 @@ export default function InteractionPanel() {
                         ) : null}
                       </div>
 
-                      <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-xs text-zinc-500 sm:flex-row sm:items-center sm:gap-4">
+                      <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 text-xs text-zinc-500 font-secondary sm:flex-row sm:items-center sm:gap-4">
                         <span className="flex items-center gap-1 whitespace-nowrap tabular-nums">
                           <i className="fas fa-comment text-[11px] opacity-80" aria-hidden />
                           {group.interactions.length}
@@ -575,33 +595,78 @@ export default function InteractionPanel() {
                                 </div>
 
                                 <div className="min-w-0 flex-1 self-center py-0.5">
-                                  <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                    <span
-                                      className="text-xs font-semibold"
-                                      style={{ color: colors.text }}
-                                    >
+                                  <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-secondary">
+                                    <span className="text-xs font-semibold" style={{ color: colors.text }}>
                                       {person.label}
                                     </span>
                                     <span className="text-[10px] tabular-nums text-zinc-500">
                                       {formatLocalTime(interaction.timestamp)}
                                     </span>
                                   </div>
-                                  <p className="text-sm leading-relaxed text-zinc-200">
-                                    {interaction.text}
-                                  </p>
+                                  <p className="text-sm leading-relaxed text-zinc-200">{interaction.text}</p>
                                 </div>
 
-                                <button
-                                  type="button"
-                                  onClick={e => {
-                                    e.stopPropagation();
-                                    setDeleteInteractionModal(interaction.id);
-                                  }}
-                                  className="flex h-8 w-8 shrink-0 items-center justify-center self-center rounded-md text-rose-400/90 opacity-0 transition-[opacity,background-color,color] duration-200 group-hover/interaction:opacity-100 hover:bg-rose-950/50 hover:text-rose-300"
-                                  title="Delete interaction"
+                                <div
+                                  data-split-delete
+                                  className="flex shrink-0 items-center self-center"
+                                  onClick={e => e.stopPropagation()}
                                 >
-                                  <i className="fas fa-trash text-xs" aria-hidden />
-                                </button>
+                                  <AnimatePresence mode="wait" initial={false}>
+                                    {armedInteractionDeleteId === interaction.id ? (
+                                      <motion.div
+                                        key="del-armed"
+                                        initial={{ opacity: 0, x: 6 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 4 }}
+                                        transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                                        className="flex items-center gap-0.5"
+                                      >
+                                        <button
+                                          type="button"
+                                          aria-label="Confirm delete"
+                                          title="Confirm delete"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            void handleDeleteInteraction(interaction.id);
+                                          }}
+                                          className="rounded-md p-1.5 text-emerald-400/95 transition-colors hover:bg-emerald-500/15 hover:text-emerald-300"
+                                        >
+                                          <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          aria-label="Cancel"
+                                          title="Cancel"
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            setArmedInteractionDeleteId(null);
+                                          }}
+                                          className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-zinc-200"
+                                        >
+                                          <X className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                        </button>
+                                      </motion.div>
+                                    ) : (
+                                      <motion.button
+                                        key="del-idle"
+                                        type="button"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.12 }}
+                                        title="Delete interaction"
+                                        aria-label="Delete interaction"
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          setArmedInteractionDeleteId(interaction.id);
+                                        }}
+                                        className="rounded-md p-1.5 text-rose-400/90 opacity-0 transition-[opacity,color] duration-200 group-hover/interaction:opacity-100 hover:bg-rose-950/30 hover:text-rose-300"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                                      </motion.button>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
                               </div>
                             </div>
                           );
@@ -615,20 +680,6 @@ export default function InteractionPanel() {
           )}
         </div>
       </div>
-
-      {/* Delete Interaction Modal */}
-      <Modal
-        isOpen={deleteInteractionModal !== null}
-        onClose={() => setDeleteInteractionModal(null)}
-        onConfirm={() => {
-          if (deleteInteractionModal) handleDeleteInteraction(deleteInteractionModal);
-          setDeleteInteractionModal(null);
-        }}
-        title="Delete Interaction"
-        message="Are you sure you want to delete this interaction? This action cannot be undone."
-        confirmText="Delete"
-        variant="danger"
-      />
 
       {/* Delete Conversation Modal */}
       <Modal

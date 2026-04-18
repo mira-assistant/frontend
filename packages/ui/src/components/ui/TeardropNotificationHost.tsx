@@ -71,12 +71,14 @@ export default function TeardropNotificationHost() {
                 <Droplet className="h-5 w-5" strokeWidth={2} />
               </div>
               <div className="min-w-0 flex-1 pt-0.5">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400/85">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400/85 font-secondary">
                   Notification
                 </p>
                 <p className="mt-0.5 text-sm font-semibold leading-snug text-zinc-50">{n.title}</p>
                 {n.body ? (
-                  <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-400">{n.body}</p>
+                  <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-400 font-secondary">
+                    {n.body}
+                  </p>
                 ) : null}
               </div>
               <button
