@@ -7,6 +7,8 @@ import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/interaction-panel';
 import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
+import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
+import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 
@@ -21,22 +23,25 @@ export default function AssistantLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center overscroll-none bg-zinc-950">
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            background:
-              'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.25), transparent), radial-gradient(circle at 100% 0%, rgba(6,182,212,0.12), transparent 50%)',
-          }}
-          aria-hidden
-        />
-        <div className="relative flex flex-col items-center gap-4">
-          <Mic className="h-16 w-16 animate-pulse text-emerald-400/90" strokeWidth={1.5} />
-          <p className="text-lg font-medium tracking-tight text-zinc-300">
-            <span className="font-secondary">Loading </span>
-            <span className="font-brand">Dadei</span>
-            <span className="font-secondary">…</span>
-          </p>
+      <div className="flex h-screen flex-col overscroll-none bg-zinc-950">
+        {isElectronCustomTitleBar() ? <DesktopTitleBarStrip /> : null}
+        <div className="relative flex min-h-0 flex-1 items-center justify-center">
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              background:
+                'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16,185,129,0.25), transparent), radial-gradient(circle at 100% 0%, rgba(6,182,212,0.12), transparent 50%)',
+            }}
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center gap-4">
+            <Mic className="h-16 w-16 animate-pulse text-emerald-400/90" strokeWidth={1.5} />
+            <p className="text-lg font-medium tracking-tight text-zinc-300">
+              <span className="font-secondary">Loading </span>
+              <span className="font-brand">Dadei</span>
+              <span className="font-secondary">…</span>
+            </p>
+          </div>
         </div>
       </div>
     );

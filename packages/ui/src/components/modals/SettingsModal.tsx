@@ -5,6 +5,7 @@ import { LogOut, Trash2, X } from 'lucide-react';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
+import { useAuthMeQuery } from '@dadei/ui/lib/queryHooks';
 
 type AssistantSettingsModalProps = {
   open: boolean;
@@ -14,13 +15,15 @@ type AssistantSettingsModalProps = {
 export default function AssistantSettingsModal({ open, onOpenChange }: AssistantSettingsModalProps) {
   const { user, refreshUser, logout } = useAuth();
   const { showToast } = useNotifications();
+  const authMeQuery = useAuthMeQuery(open);
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
 
-  const email = user?.email ?? '—';
+  const profile = authMeQuery.data ?? user;
+  const email = profile?.email ?? '—';
   const canDelete =
-    !!user && deletePhrase.trim().toLowerCase() === user.email.trim().toLowerCase();
+    !!profile && deletePhrase.trim().toLowerCase() === profile.email.trim().toLowerCase();
 
   const handleSignOut = async () => {
     onOpenChange(false);
@@ -80,7 +83,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
               </h3>
               <p className="mt-2 text-sm text-zinc-400 font-secondary">Email</p>
               <p className="mt-0.5 font-medium text-zinc-100">{email}</p>
-              {user?.has_password === false ? (
+              {profile?.has_password === false ? (
                 <p className="mt-2 text-xs text-zinc-500 font-secondary">
                   Signed in with Google — no password on file.
                 </p>

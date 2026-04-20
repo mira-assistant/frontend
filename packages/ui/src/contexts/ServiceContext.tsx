@@ -6,6 +6,8 @@ import { serviceApi } from '@dadei/ui/lib/api/service';
 import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
@@ -61,6 +63,7 @@ function readInitialClientName(): string {
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
   const { showToast } = useNotifications();
+  const queryClient = useQueryClient();
   const getAccessTokenRef = useRef(getAccessToken);
   getAccessTokenRef.current = getAccessToken;
 
@@ -84,6 +87,10 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   /** Latest client id for stale checks after async register. */
   const clientNameRef = useRef(clientName);
   clientNameRef.current = clientName;
+  /** Used for unload/DELETE so deregister effect does not depend on `clientName` (rename must not trigger cleanup deregister). */
+  const clientNameForLifecycleRef = useRef(clientName);
+  clientNameForLifecycleRef.current = clientName;
+  const prevClientNameForRealtimeRef = useRef<string | null>(null);
 
   /**
    * Resolve persisted identity before any registration.
@@ -130,8 +137,9 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) {
       stopRealtimeClient();
       setRegistrationConflict(false);
+      queryClient.removeQueries({ queryKey: queryKeys.serviceClients });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, queryClient]);
 
   useEffect(() => {
     setRegistrationConflict(false);
@@ -215,6 +223,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
           setIsConnected(true);
           isRegisteredRef.current = true;
           shouldResolveAutoClientNameRef.current = false;
+          void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
           console.log(`Client ${idAtStart} registered`);
 
           startRealtimeClient({
@@ -269,7 +278,32 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     return () => {
       registerCancelled = true;
     };
-  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, showToast]);
+  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, queryClient, showToast]);
+
+  /**
+   * PATCH rename already moves registration server-side. Do not re-POST /clients for the new id.
+   * When `clientName` changes while this session is still registered, only reconnect the WebSocket.
+   */
+  useEffect(() => {
+    if (!isAuthenticated || !isConnected || !isRegisteredRef.current) {
+      prevClientNameForRealtimeRef.current = clientName;
+      return;
+    }
+
+    const prev = prevClientNameForRealtimeRef.current;
+    prevClientNameForRealtimeRef.current = clientName;
+
+    if (prev === null || prev === clientName) {
+      return;
+    }
+
+    stopRealtimeClient();
+    startRealtimeClient({
+      getAccessToken: () => getAccessTokenRef.current(),
+      clientId: clientName,
+    });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
+  }, [clientName, isAuthenticated, isConnected, queryClient]);
 
   useEffect(() => {
     if (!isAuthenticated || !isConnected) return;
@@ -286,7 +320,8 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       if (!accessToken) return;
       const baseUrl = process.env.API_URL || 'http://localhost:8000';
       const prefix = process.env.BETA === 'true' ? '/api/v2' : '/api/v1';
-      const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(clientName)}`;
+      const id = clientNameForLifecycleRef.current;
+      const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(id)}`;
       void fetch(endpoint, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -299,12 +334,14 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     const deregisterClient = async () => {
       if (!isRegisteredRef.current) return;
 
+      const id = clientNameForLifecycleRef.current;
       try {
-        console.log(`Deregistering client ${clientName}...`);
+        console.log(`Deregistering client ${id}...`);
         stopRealtimeClient();
-        await serviceApi.deregisterClient(clientName);
+        await serviceApi.deregisterClient(id);
         isRegisteredRef.current = false;
-        console.log(`Client ${clientName} deregistered`);
+        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
+        console.log(`Client ${id} deregistered`);
       } catch (error) {
         console.error('Failed to deregister client:', error);
       }
@@ -321,7 +358,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('pagehide', handlePageHide);
       deregisterClient();
     };
-  }, [clientName, isAuthenticated, isConnected]);
+  }, [isAuthenticated, isConnected, queryClient]);
 
   useEffect(() => {
     const handleServiceStatusChanged = (status: { enabled: boolean }) => {

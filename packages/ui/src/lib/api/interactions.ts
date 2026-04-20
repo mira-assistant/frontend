@@ -8,6 +8,11 @@ interface GetInteractionsParams {
   offset?: number;
 }
 
+export interface RegisterInteractionTiming {
+  chunkStartMs?: number;
+  chunkEndMs?: number;
+}
+
 export const interactionsApi = {
   /**
    * Get all interactions for the network
@@ -52,18 +57,24 @@ export const interactionsApi = {
   async register(
     audioData: ArrayBuffer,
     clientId: string,
+    timing?: RegisterInteractionTiming,
   ): Promise<void> {
     const formData = new FormData();
     const blob = new Blob([audioData], { type: 'audio/wav' });
     formData.append('audio', blob, 'audio.wav');
     formData.append('client_id', clientId);
+    if (timing?.chunkStartMs != null) {
+      formData.append('chunk_start_ms', String(timing.chunkStartMs));
+    }
+    if (timing?.chunkEndMs != null) {
+      formData.append('chunk_end_ms', String(timing.chunkEndMs));
+    }
 
     try {
       await api.post(
         ENDPOINTS.INTERACTIONS_REGISTER,
         formData,
         {
-          headers: { 'Content-Type': 'multipart/form-data' },
           timeout: API_CONFIG.TIMEOUTS.INTERACTION,
           validateStatus: (status) => status === 204,
         }

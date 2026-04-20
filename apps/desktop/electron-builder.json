@@ -24,8 +24,16 @@
     "target": "nsis",
     "icon": "resources/icon.png"
   },
+  "nsis": {
+    "differentialPackage": false
+  },
   "mac": {
-    "target": "dmg",
+    "target": ["dmg", "zip"],
     "icon": "resources/icon.png"
+  },
+  "linux": {
+    "target": ["AppImage"],
+    "icon": "resources/icon.png",
+    "category": "Utility"
   }
 }
