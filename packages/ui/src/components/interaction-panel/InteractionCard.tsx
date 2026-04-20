@@ -28,18 +28,18 @@ export default function InteractionCard({
     <div className="group/interaction overflow-hidden rounded-lg border border-white/10 bg-zinc-900/70 transition-[border-color,box-shadow] duration-200 hover:border-emerald-500/25 hover:shadow-sm">
       <div className="flex min-w-0 items-center gap-3 p-3">
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-md font-bold text-white"
           style={{ backgroundColor: colors.border }}
         >
           {person.label[0].toUpperCase()}
         </div>
 
         <div className="min-w-0 flex-1 self-center py-0.5">
-          <div className="mb-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-secondary">
-            <span className="text-xs font-semibold" style={{ color: colors.text }}>
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 font-secondary">
+            <span className="text-sm font-semibold" style={{ color: colors.text }}>
               {person.label}
             </span>
-            <span className="text-[10px] tabular-nums text-zinc-500">
+            <span className="text-xs tabular-nums text-zinc-500">
               {formatLocalTime(interaction.timestamp)}
             </span>
           </div>

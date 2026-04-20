@@ -12,7 +12,7 @@ function ConversationExpandedSummary({ group }: { group: ConversationGroupView }
   if (!topic && !context) return null;
   return (
     <div className="border-b border-white/8 bg-zinc-950/40 px-4 py-3 font-secondary">
-      <p className="whitespace-normal text-pretty text-xs leading-relaxed text-zinc-500 wrap-anywhere">
+      <p className="whitespace-normal text-pretty text-sm leading-relaxed text-zinc-500 wrap-anywhere">
         {context}
       </p>
     </div>
@@ -124,14 +124,14 @@ export default function ConversationCard({
           ) : null}
 
           <div className="min-w-0 flex-1 overflow-hidden py-0.5">
-            <h3 className="text-sm font-semibold text-zinc-100">
+            <h3 className="text-md font-semibold text-zinc-100">
               <span className="block truncate" title={getConversationTitle(group)}>
                 {getConversationTitle(group)}
               </span>
             </h3>
           </div>
 
-          <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 pl-5 text-xs text-zinc-500 font-secondary sm:flex-row sm:items-center sm:gap-4">
+          <div className="flex shrink-0 flex-col items-end justify-center gap-0.5 pl-5 text-sm text-zinc-500 font-secondary sm:flex-row sm:items-center sm:gap-4">
             <span className="flex items-center gap-1 whitespace-nowrap tabular-nums">
               <i className="fas fa-comment text-[11px] opacity-80" aria-hidden />
               {group.interactions.length}

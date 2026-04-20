@@ -90,7 +90,7 @@ export function DesktopTitleBarStrip({ className }: { className?: string }) {
     >
       <span
         className={cn(
-          'pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 select-none font-semibold tracking-tight text-zinc-500 font-brand',
+          'pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 select-none font-semibold tracking-tight text-zinc-500 font-primary',
           isElectronMac() ? 'text-sm leading-none' : 'text-base',
         )}
       >

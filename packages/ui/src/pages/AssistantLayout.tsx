@@ -37,9 +37,7 @@ export default function AssistantLayout() {
           <div className="relative flex flex-col items-center gap-4">
             <Mic className="h-16 w-16 animate-pulse text-emerald-400/90" strokeWidth={1.5} />
             <p className="text-lg font-medium tracking-tight text-zinc-300">
-              <span className="font-secondary">Loading </span>
-              <span className="font-brand">Dadei</span>
-              <span className="font-secondary">…</span>
+              <span className="font-secondary">Loading dadei…</span>
             </p>
           </div>
         </div>
