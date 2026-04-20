@@ -107,8 +107,8 @@ function SectionHeading({
   body: string;
 }) {
   return (
-    <div className="max-w-3xl">
-      <p className="mb-3 text-xs tracking-[0.22em] text-emerald-300/75 font-secondary">
+    <div className="max-w-4xl">
+      <p className="mb-2 text-md tracking-[0.22em] text-emerald-300/75 font-secondary">
         {eyebrow}
       </p>
       <h2 className="font-primary text-3xl leading-tight tracking-tight text-zinc-100 sm:text-4xl lg:text-5xl">
@@ -127,13 +127,13 @@ function LaunchConversationIntro() {
       side: 'left',
       text: 'omg same, yesterday i forgot to wish my mom happy bday!',
       appearAt: 1.6,
-      readFor: 1.8,
+      readFor: 2.4,
     },
     {
       side: 'left',
       text: 'i\'m too lazy to even update my reminders.',
-      appearAt: 3.4,
-      readFor: 2.5,
+      appearAt: 4.0,
+      readFor: 1.9,
     },
     { side: 'right', text: 'you guys should try dadei', appearAt: 5.9, readFor: 1.5 },
   ] as const;
@@ -394,7 +394,7 @@ export default function LandingPage() {
                 title="the assistant you forget about, until you need it."
                 body="dadei keeps your context organized across your day, then shows up instantly when you ask for it."
               />
-              <p className="mt-8 max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/60 px-5 py-4 text-sm leading-relaxed text-zinc-300 font-secondary">
+              <p className="mt-8 max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/60 px-5 py-4 text-md leading-relaxed text-zinc-300 font-secondary">
                 <span className="font-medium text-emerald-200">
                   "who was i just talking to?" "when did i last talk to mark?"
                 </span>{' '}
@@ -418,14 +418,12 @@ export default function LandingPage() {
               transition={{ duration: 0.45 }}
               className="relative z-10"
             >
-              <p className="text-xs tracking-[0.22em] text-emerald-200/80 font-secondary">why dadei?</p>
-              <h2 className="mt-3 max-w-4xl font-primary text-3xl leading-tight text-zinc-100 sm:text-4xl lg:text-5xl">
-                named after my grandmother, dadi.
-              </h2>
-              <p className="mt-6 max-w-3xl text-base leading-relaxed text-zinc-300 font-secondary sm:text-lg">
-                growing up, she made sure i was fed, happy, and on track. she focused on the things i did
-                not have to think about, because she wanted me to have a better life.
-              </p>
+              <SectionHeading
+                eyebrow="why dadei?"
+                title="named after my grandmother, dadi."
+                body="growing up, she made sure i was fed, happy, and on track. she focused on the things i did not have to think about, because she wanted me to have a better life."
+              />
+
             </motion.div>
 
             <motion.p
@@ -435,8 +433,8 @@ export default function LandingPage() {
               transition={{ duration: 0.5, delay: 0.08 }}
               className="relative z-10 mt-10 max-w-5xl text-2xl leading-snug text-zinc-100 font-secondary sm:text-3xl"
             >
-              <span className="text-emerald-200/90">"</span> dadei carries that same spirit: quiet support,
-              thoughtful reminders, and genuine care behind every nudge.
+              <span className="text-emerald-200/90">"</span>
+              <span> dadei carries that same spirit: quiet support, thoughtful reminders, and genuine care behind every nudge. </span>
               <span className="text-emerald-200/90">"</span>
             </motion.p>
           </div>
@@ -505,10 +503,10 @@ export default function LandingPage() {
           <div className="overflow-hidden rounded-4xl border border-emerald-300/25 bg-linear-to-r from-emerald-500/12 via-teal-500/10 to-cyan-500/10 p-8 shadow-[0_36px_90px_-45px_rgba(16,185,129,0.95)] sm:p-12">
             <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
               <div>
-                <p className="text-xs tracking-[0.2em] text-emerald-200/80 font-secondary">
+                <p className="text-md tracking-[0.2em] text-emerald-200/80 font-secondary">
                   Desktop first momentum
                 </p>
-                <h2 className="mt-3 font-primary text-3xl leading-tight text-zinc-50 sm:text-4xl">
+                <h2 className="mt-2 font-primary text-3xl leading-tight text-zinc-50 sm:text-4xl">
                   Keep Dadei close on your desktop.
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-200/90 font-secondary">
@@ -540,10 +538,9 @@ export default function LandingPage() {
 
       <footer className="border-t border-white/10 bg-zinc-950/70 py-10">
         <div className="mx-auto flex w-full max-w-[1240px] flex-col items-center justify-between gap-5 px-5 sm:flex-row sm:px-8">
-          <div className="flex items-center gap-2 text-zinc-400">
-            <Mic className="h-4 w-4 text-emerald-300" aria-hidden />
-            <span className="font-semibold text-zinc-100 font-brand">Dadei</span>
-            <span className="text-sm font-secondary">© {new Date().getFullYear()}</span>
+          <div className="flex items-center gap-4 text-zinc-400">
+            <Mic className="h-5 w-5 text-emerald-300" aria-hidden />
+            <span className="font-semibold text-zinc-100 text-xl font-brand">Dadei</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-300 font-secondary">
             <a

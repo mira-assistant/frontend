@@ -310,7 +310,7 @@ export default function LoginOverlay({
                   className="pointer-events-none absolute right-2 top-[-4px] z-10 rounded-lg border border-sky-400/40 bg-sky-500/30 px-3 py-1 text-xs font-medium leading-none tracking-wide text-sky-50 shadow-md ring-1 ring-sky-300/25 font-secondary"
                   aria-hidden
                 >
-                  #1
+                  best option
                 </span>
                 <button
                   type="button"
