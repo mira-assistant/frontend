@@ -10,10 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Montserrat', 'system-ui', 'sans-serif'],
-        secondary: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Orbitron', 'system-ui', 'sans-serif'],
+        secondary: ['Montserrat', 'system-ui', 'sans-serif'],
         brand: ['Orbitron', 'system-ui', 'sans-serif'],
-        display: ['Orbitron', 'system-ui', 'sans-serif'],
       },
     },
   },

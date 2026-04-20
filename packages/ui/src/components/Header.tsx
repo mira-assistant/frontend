@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings2, LogOut, Users } from 'lucide-react';
+import { Settings2, LogOut, Users, Mic } from 'lucide-react';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
@@ -12,7 +12,6 @@ import Tooltip from '@dadei/ui/components/ui/Tooltip';
 import PeoplePanel from '@dadei/ui/components/PeoplePanel';
 import { cn } from '@dadei/ui/lib/cn';
 import { setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
-import logoUrl from '../assets/logo.png';
 
 interface HeaderProps {
   isPeoplePanelOpen: boolean;
@@ -183,7 +182,9 @@ export default function Header({
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-emerald-400/95">
-          <img src={logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900/70 ring-1 ring-white/10">
+            <Mic className="h-5 w-5 text-emerald-300" strokeWidth={2} aria-hidden="true" />
+          </span>
           <span className="hidden font-brand sm:inline">dadei</span>
         </div>
       </div>

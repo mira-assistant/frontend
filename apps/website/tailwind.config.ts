@@ -10,14 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        /** Montserrat — interaction copy, headings, UI body */
-        sans: ['Montserrat', 'system-ui', 'sans-serif'],
-        /** Inter — metadata, labels, hints */
-        secondary: ['Inter', 'system-ui', 'sans-serif'],
+        /** Orbitron — interaction copy, headings, UI body */
+        sans: ['Orbitron', 'system-ui', 'sans-serif'],
+        /** Montserrat — metadata, labels, hints */
+        secondary: ['Montserrat', 'system-ui', 'sans-serif'],
         /** Orbitron — wordmark and marketing-style titles */
         brand: ['Orbitron', 'system-ui', 'sans-serif'],
-        /** Large landing/marketing display */
-        display: ['Orbitron', 'system-ui', 'sans-serif'],
       },
     },
   },
