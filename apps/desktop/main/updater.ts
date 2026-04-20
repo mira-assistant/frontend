@@ -2,6 +2,11 @@ import { app, dialog } from 'electron';
 import axios from 'axios';
 import { autoUpdater } from 'electron-updater';
 
+/** Full downloads only; GitHub releases need not ship *.blockmap assets. */
+if (app.isPackaged) {
+  autoUpdater.disableDifferentialDownload = true;
+}
+
 const ROOT_TIMEOUT_MS = 10_000;
 
 interface RootHealthResponse {

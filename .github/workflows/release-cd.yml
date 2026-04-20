@@ -26,6 +26,8 @@ jobs:
             platform: windows
           - os: macos-latest
             platform: macos
+          - os: ubuntu-latest
+            platform: linux
 
     runs-on: ${{ matrix.os }}
 
@@ -53,6 +55,12 @@ jobs:
           printf 'API_URL=%s\nBETA=false\n' "$API_URL" > .env.production
           printf 'API_URL=%s\nBETA=false\n' "$API_URL" > apps/desktop/.env.production
 
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsecret-1-dev
+
       - name: Rebuild native modules (keytar)
         working-directory: apps/desktop
         run: npx --yes @electron/rebuild -f -w keytar
@@ -67,6 +75,11 @@ jobs:
         working-directory: apps/desktop
         env:
           CSC_IDENTITY_AUTO: '-'
+        run: npm run package
+
+      - name: Package (Linux)
+        if: matrix.platform == 'linux'
+        working-directory: apps/desktop
         run: npm run package
 
       - uses: actions/upload-artifact@v4
@@ -97,6 +110,11 @@ jobs:
           name: installers-macos
           path: assets/macos
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: installers-linux
+          path: assets/linux
+
       - name: Drop per-OS debug yml
         run: find assets -name builder-debug.yml -delete
 
@@ -111,5 +129,5 @@ jobs:
           artifactErrorsFailBuild: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
-          artifacts: assets/windows/*.exe,assets/windows/*.yml,assets/windows/*.blockmap,assets/macos/*.dmg,assets/macos/*.yml,assets/macos/*.blockmap
+          artifacts: assets/windows/*.exe,assets/windows/*.yml,assets/macos/*.dmg,assets/macos/*.zip,assets/macos/*.yml,assets/linux/*.AppImage,assets/linux/*.yml
           token: ${{ secrets.GITHUB_TOKEN }}

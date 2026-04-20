@@ -20,8 +20,6 @@ const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 let mainWindow: BrowserWindow | null = null;
 let currentClientName: string | null = null;
 
-const isDarwin = process.platform === 'darwin';
-
 function windowFromContents(contents: WebContents): BrowserWindow | null {
   return BrowserWindow.fromWebContents(contents) ?? null;
 }
@@ -32,11 +30,7 @@ function createWindow() {
     height: 800,
     autoHideMenuBar: true,
     backgroundColor: '#09090b',
-    ...(isDarwin
-      ? { titleBarStyle: 'hiddenInset' as const }
-      : {
-          frame: false,
-        }),
+    frame: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

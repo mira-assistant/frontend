@@ -23,7 +23,7 @@ function useMaximizedState() {
   return { api, isMaximized, setIsMaximized };
 }
 
-/** Native-style controls for frameless Electron on Windows / Linux. */
+/** Window controls for frameless desktop Electron (all platforms). */
 export function DesktopWindowControls({ className }: { className?: string }) {
   const { api, isMaximized, setIsMaximized } = useMaximizedState();
 
