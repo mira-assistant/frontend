@@ -20,6 +20,8 @@ const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 let mainWindow: BrowserWindow | null = null;
 let currentClientName: string | null = null;
 
+const isDarwin = process.platform === 'darwin';
+
 function windowFromContents(contents: WebContents): BrowserWindow | null {
   return BrowserWindow.fromWebContents(contents) ?? null;
 }
@@ -30,7 +32,13 @@ function createWindow() {
     height: 800,
     autoHideMenuBar: true,
     backgroundColor: '#09090b',
-    frame: false,
+    ...(isDarwin
+      ? {
+          titleBarStyle: 'hiddenInset' as const,
+          // Align with our slim title strip (see DesktopTitleBarStrip mac height).
+          trafficLightPosition: { x: 16, y: 8.5 },
+        }
+      : { frame: false }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

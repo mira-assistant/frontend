@@ -7,7 +7,7 @@ import { buildWebGoogleOAuthLoginUrl } from '@dadei/ui/lib/webOAuthUrls';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import logoUrl from '../../assets/logo.png';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
-import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
+import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 
 const veilEase = [0.22, 1, 0.36, 1] as const;
 
@@ -113,7 +113,7 @@ export default function LoginOverlay({
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-x-hidden">
-      {isElectronCustomTitleBar() ? <DesktopTitleBarStrip /> : null}
+      {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}
       <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-6">
         <div className="absolute inset-0 bg-zinc-950" aria-hidden />
         <div

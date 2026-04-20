@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { Copy, Minus, Square, X } from 'lucide-react';
 import { cn } from '@dadei/ui/lib/cn';
-import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
+import { isElectronDesktop, isElectronMac, needsCustomWindowControls } from '@dadei/ui/lib/electronWindowChrome';
 
 function useMaximizedState() {
   const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
@@ -40,7 +40,7 @@ export function DesktopWindowControls({ className }: { className?: string }) {
     void api?.windowClose?.();
   }, [api]);
 
-  if (!isElectronCustomTitleBar() || !api?.windowMinimize) {
+  if (!needsCustomWindowControls() || !api?.windowMinimize) {
     return null;
   }
 
@@ -49,7 +49,7 @@ export function DesktopWindowControls({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn('flex self-stretch border-l border-white/[0.08]', className)}
+      className={cn('flex self-stretch border-l border-white/8', className)}
       style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
     >
       <button type="button" onClick={minimize} className={btn} title="Minimize" aria-label="Minimize">
@@ -74,24 +74,33 @@ export function DesktopWindowControls({ className }: { className?: string }) {
   );
 }
 
-/** Slim top bar when the main assistant header is not shown (login, loading). */
+/** Slim top bar: drag + branding; custom window controls only on Windows / Linux. */
 export function DesktopTitleBarStrip({ className }: { className?: string }) {
-  if (!isElectronCustomTitleBar()) return null;
+  if (!isElectronDesktop()) return null;
 
   return (
     <div
       className={cn(
-        'relative z-50 flex h-10 shrink-0 items-stretch border-b border-white/[0.08] bg-zinc-950/90 backdrop-blur-md',
+        'relative z-50 flex w-full shrink-0 border-b border-white/8 bg-zinc-950/90 backdrop-blur-md',
+        // Shorter strip on macOS so system traffic lights sit nearer the vertical center of the bar.
+        isElectronMac() ? 'h-8 items-center' : 'h-11 items-stretch',
         className,
       )}
       style={{ WebkitAppRegion: 'drag' } as CSSProperties}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-2 pl-4">
-        <span className="pointer-events-none select-none text-xs font-semibold tracking-tight text-zinc-500 font-brand">
-          dadei
-        </span>
-      </div>
-      <DesktopWindowControls className="shrink-0" />
+      <span
+        className={cn(
+          'pointer-events-none absolute left-1/2 top-1/2 z-0 -translate-x-1/2 -translate-y-1/2 select-none font-semibold tracking-tight text-zinc-500 font-brand',
+          isElectronMac() ? 'text-sm leading-none' : 'text-base',
+        )}
+      >
+        dadei
+      </span>
+      {needsCustomWindowControls() ? (
+        <div className="relative z-10 ml-auto flex self-stretch">
+          <DesktopWindowControls />
+        </div>
+      ) : null}
     </div>
   );
 }

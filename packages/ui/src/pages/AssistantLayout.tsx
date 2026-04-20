@@ -8,7 +8,7 @@ import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/interaction-panel';
 import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
-import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
+import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export default function AssistantLayout() {
   if (isLoading) {
     return (
       <div className="flex h-screen flex-col overscroll-none bg-zinc-950">
-        {isElectronCustomTitleBar() ? <DesktopTitleBarStrip /> : null}
+        {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
           <div
             className="absolute inset-0 opacity-40"
@@ -78,6 +78,7 @@ export default function AssistantLayout() {
       <ActionWebhookBanners />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}
         <Header
           isPeoplePanelOpen={isPeoplePanelOpen}
           setIsPeoplePanelOpen={setIsPeoplePanelOpen}

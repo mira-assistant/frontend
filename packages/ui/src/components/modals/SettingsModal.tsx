@@ -56,8 +56,8 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[240] bg-zinc-950/55 backdrop-blur-md" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[250] w-[min(96vw,42rem)] max-h-[min(90dvh,52rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/92 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl focus:outline-none">
+        <Dialog.Overlay className="fixed inset-0 z-240 bg-zinc-950/55 backdrop-blur-md" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-250 w-[min(96vw,42rem)] max-h-[min(90dvh,52rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/92 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl focus:outline-none">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <Dialog.Title className="text-lg font-semibold tracking-tight text-zinc-50">
@@ -128,8 +128,8 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
 
       <AlertDialog.Root open={alertOpen} onOpenChange={setAlertOpen}>
         <AlertDialog.Portal>
-          <AlertDialog.Overlay className="fixed inset-0 z-[260] bg-black/60 backdrop-blur-sm" />
-          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[270] w-[min(90vw,24rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-rose-500/25 bg-zinc-900 p-6 shadow-2xl focus:outline-none">
+          <AlertDialog.Overlay className="fixed inset-0 z-260 bg-black/60 backdrop-blur-sm" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-270 w-[min(90vw,24rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-rose-500/25 bg-zinc-900 p-6 shadow-2xl focus:outline-none">
             <AlertDialog.Title className="text-base font-semibold text-zinc-50">
               Delete account?
             </AlertDialog.Title>

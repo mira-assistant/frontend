@@ -4,7 +4,7 @@ import LoginOverlay from '@dadei/ui/components/modals/LoginModal';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
-import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
+import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 
 function isSafeInternalPath(path: string): boolean {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) return false;
@@ -32,7 +32,7 @@ export default function LoginPage() {
   if (isLoading || isAuthenticated) {
     return (
       <div className="flex h-screen flex-col bg-zinc-950">
-        {isElectronCustomTitleBar() ? <DesktopTitleBarStrip /> : null}
+        {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}
         <div className="flex flex-1 items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <i className="fas fa-microphone-alt text-6xl text-emerald-400/80 animate-pulse" />

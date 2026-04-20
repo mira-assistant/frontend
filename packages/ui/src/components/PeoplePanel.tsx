@@ -142,7 +142,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.34, ease: [0.32, 0.72, 0, 1] }}
-            className="fixed bottom-0 right-0 top-[var(--assistant-header-h,4.75rem)] flex min-h-0 w-full max-w-md flex-col border-l border-white/10 bg-zinc-950/95 shadow-[-10px_0_40px_rgba(0,0,0,0.4)] backdrop-blur-xl will-change-transform sm:w-1/3"
+            className="fixed bottom-0 right-0 top-(--assistant-header-h,4.75rem) flex min-h-0 w-full max-w-md flex-col border-l border-white/10 bg-zinc-950/95 shadow-[-10px_0_40px_rgba(0,0,0,0.4)] backdrop-blur-xl will-change-transform sm:w-1/3"
             style={{ zIndex: PEOPLE_DRAWER_Z }}
           >
             {/* Header */}

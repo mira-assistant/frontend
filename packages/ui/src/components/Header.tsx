@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings2, LogOut, Users } from 'lucide-react';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
@@ -10,9 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@dadei/ui/lib/queryKeys';
 import Tooltip from '@dadei/ui/components/ui/Tooltip';
 import PeoplePanel from '@dadei/ui/components/PeoplePanel';
-import { DesktopWindowControls } from '@dadei/ui/components/DesktopWindowChrome';
 import { cn } from '@dadei/ui/lib/cn';
-import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
 import { setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import logoUrl from '../assets/logo.png';
 
@@ -178,40 +176,19 @@ export default function Header({
     return isAvailable === true ? 'success' : 'error';
   };
 
-  const customTitleBar = isElectronCustomTitleBar();
-
   return (
     <header
-      className={cn(
-        'relative z-20 flex shrink-0 justify-between border-b border-white/[0.08] bg-zinc-950/55 px-6 py-4 backdrop-blur-md',
-        customTitleBar ? 'items-stretch' : 'items-center',
-      )}
+      className="relative z-20 flex shrink-0 items-center justify-between border-b border-white/8 bg-zinc-950/55 px-6 py-4 backdrop-blur-md"
       style={{ minHeight: 'var(--assistant-header-h, 4.75rem)' }}
     >
-      <div
-        className={cn(
-          'flex min-w-0 flex-1 items-center gap-3',
-        )}
-        style={
-          customTitleBar
-            ? ({ WebkitAppRegion: 'drag' } as CSSProperties)
-            : undefined
-        }
-      >
+      <div className="flex min-w-0 flex-1 items-center gap-3">
         <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-emerald-400/95">
           <img src={logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10" />
           <span className="hidden font-brand sm:inline">dadei</span>
         </div>
       </div>
 
-      <div
-        className="flex items-center gap-4 sm:gap-6"
-        style={
-          customTitleBar
-            ? ({ WebkitAppRegion: 'no-drag' } as CSSProperties)
-            : undefined
-        }
-      >
+      <div className="flex items-center gap-4 sm:gap-6">
         <div className="flex items-center gap-2">
           <label
             htmlFor="clientName"
@@ -291,12 +268,6 @@ export default function Header({
           onClose={() => setIsPeoplePanelOpen(false)}
           excludeElement={peopleButtonRef.current}
         />
-
-        {customTitleBar ? (
-          <div className="ml-2 flex self-stretch -mr-6">
-            <DesktopWindowControls />
-          </div>
-        ) : null}
       </div>
     </header>
   );
