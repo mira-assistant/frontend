@@ -21,12 +21,41 @@ interface ServiceContextType {
 export const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 const ENABLE_TIMEOUT_MS = 5000;
+const DEFAULT_CLIENT_PREFIX = 'client';
+const AUTO_NAME_PATTERN = /^client\d+$/;
+const FALLBACK_DEFAULT_CLIENT_NAME = `${DEFAULT_CLIENT_PREFIX}1`;
+const MAX_AUTO_NAME_REGISTER_ATTEMPTS = 5;
+
+function pickFirstAvailableClientName(existing: string[]): string {
+  const used = new Set<number>();
+  for (const name of existing) {
+    const match = AUTO_NAME_PATTERN.exec(name);
+    if (!match) continue;
+    const value = Number(name.slice(DEFAULT_CLIENT_PREFIX.length));
+    if (Number.isInteger(value) && value > 0) {
+      used.add(value);
+    }
+  }
+
+  for (let i = 1; i < 10_000; i += 1) {
+    if (!used.has(i)) {
+      return `${DEFAULT_CLIENT_PREFIX}${i}`;
+    }
+  }
+
+  return `${DEFAULT_CLIENT_PREFIX}${Date.now()}`;
+}
+
+async function resolveAutoClientName(): Promise<string> {
+  const existing = await serviceApi.listClients();
+  return pickFirstAvailableClientName(existing);
+}
 
 function readInitialClientName(): string {
   if (typeof window === 'undefined' || window.electronAPI) {
-    return 'web-client';
+    return FALLBACK_DEFAULT_CLIENT_NAME;
   }
-  return getStoredClientName() || 'web-client';
+  return getStoredClientName() || FALLBACK_DEFAULT_CLIENT_NAME;
 }
 
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
@@ -42,6 +71,13 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const [isClientIdentityReady, setIsClientIdentityReady] = useState(false);
   const [isTogglingService, setIsTogglingService] = useState(false);
   const [registrationConflict, setRegistrationConflict] = useState(false);
+  const shouldResolveAutoClientNameRef = useRef(
+    Boolean(
+      typeof window !== 'undefined' &&
+      !window.electronAPI &&
+      !getStoredClientName()
+    )
+  );
 
   const enableTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isRegisteredRef = useRef(false);
@@ -65,11 +101,16 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
         .then((result) => {
           if (cancelled) return;
           if (result.success && result.clientName) {
+            shouldResolveAutoClientNameRef.current = false;
             setClientName(result.clientName);
+            return;
           }
+          shouldResolveAutoClientNameRef.current = true;
+          setClientName(FALLBACK_DEFAULT_CLIENT_NAME);
         })
         .catch(() => {
-          /* keep default client name */
+          shouldResolveAutoClientNameRef.current = true;
+          setClientName(FALLBACK_DEFAULT_CLIENT_NAME);
         })
         .finally(() => {
           if (!cancelled) setIsClientIdentityReady(true);
@@ -111,66 +152,115 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       if (!clientName) return;
       if (isRegisteredRef.current) return;
 
-      const idAtStart = clientName;
+      const requestedNameAtStart = clientName;
+      let idAtStart = requestedNameAtStart;
+      const allowAutoRetry =
+        shouldResolveAutoClientNameRef.current && AUTO_NAME_PATTERN.test(requestedNameAtStart);
 
-      try {
-        await serviceApi.registerClient(idAtStart);
-
-        if (registerCancelled) {
-          try {
-            await serviceApi.deregisterClient(idAtStart);
-          } catch {
-            /* best-effort undo of orphan registration */
-          }
+      for (let attempt = 0; attempt < MAX_AUTO_NAME_REGISTER_ATTEMPTS; attempt += 1) {
+        if (registerCancelled || clientNameRef.current !== requestedNameAtStart) {
           return;
         }
 
-        if (clientNameRef.current !== idAtStart) {
+        if (allowAutoRetry) {
           try {
-            await serviceApi.deregisterClient(idAtStart);
+            idAtStart = await resolveAutoClientName();
           } catch {
-            /* best-effort */
+            idAtStart = attempt === 0 ? requestedNameAtStart : idAtStart;
           }
+        }
+
+        try {
+          await serviceApi.registerClient(idAtStart);
+
+          if (registerCancelled) {
+            try {
+              await serviceApi.deregisterClient(idAtStart);
+            } catch {
+              /* best-effort undo of orphan registration */
+            }
+            return;
+          }
+
+          if (clientNameRef.current !== requestedNameAtStart) {
+            try {
+              await serviceApi.deregisterClient(idAtStart);
+            } catch {
+              /* best-effort */
+            }
+            return;
+          }
+
+          setRegistrationConflict(false);
+          if (window.electronAPI) {
+            await window.electronAPI.storeClientName(idAtStart);
+          } else {
+            setStoredClientName(idAtStart);
+          }
+
+          if (registerCancelled || clientNameRef.current !== requestedNameAtStart) {
+            try {
+              await serviceApi.deregisterClient(idAtStart);
+            } catch {
+              /* best-effort */
+            }
+            return;
+          }
+
+          if (requestedNameAtStart !== idAtStart) {
+            setClientName(idAtStart);
+            showToast(`Client name "${requestedNameAtStart}" was taken. Switched to "${idAtStart}".`, 'error');
+          }
+
+          setIsConnected(true);
+          isRegisteredRef.current = true;
+          shouldResolveAutoClientNameRef.current = false;
+          console.log(`Client ${idAtStart} registered`);
+
+          startRealtimeClient({
+            getAccessToken: () => getAccessTokenRef.current(),
+            clientId: idAtStart,
+          });
+          return;
+        } catch (error: any) {
+          const status = error?.response?.status;
+          if (status === 409 && allowAutoRetry) {
+            continue;
+          }
+
+          console.error('Failed to register client:', error);
+          if (status === 409) {
+            setRegistrationConflict(true);
+            showToast(
+              `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
+              'error'
+            );
+          }
+          setIsConnected(false);
+          isRegisteredRef.current = false;
+          stopRealtimeClient();
           return;
         }
+      }
 
-        setRegistrationConflict(false);
-        if (window.electronAPI) {
-          await window.electronAPI.storeClientName(idAtStart);
-        } else {
-          setStoredClientName(idAtStart);
-        }
-
-        if (registerCancelled || clientNameRef.current !== idAtStart) {
-          try {
-            await serviceApi.deregisterClient(idAtStart);
-          } catch {
-            /* best-effort */
-          }
-          return;
-        }
-
-        setIsConnected(true);
-        isRegisteredRef.current = true;
-        console.log(`Client ${idAtStart} registered`);
-
-        startRealtimeClient({
-          getAccessToken: () => getAccessTokenRef.current(),
-          clientId: idAtStart,
-        });
-      } catch (error: any) {
-        console.error('Failed to register client:', error);
-        const status = error?.response?.status;
-        if (status === 409) {
-          setRegistrationConflict(true);
-          showToast(
-            `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
-            'error'
-          );
-        }
+      if (allowAutoRetry) {
+        setRegistrationConflict(true);
         setIsConnected(false);
         isRegisteredRef.current = false;
         stopRealtimeClient();
+        showToast(
+          `Could not claim an automatic client name after ${MAX_AUTO_NAME_REGISTER_ATTEMPTS} attempts. Try again.`,
+          'error'
+        );
+      } else {
+        setRegistrationConflict(true);
+        setIsConnected(false);
+        isRegisteredRef.current = false;
+        stopRealtimeClient();
+        showToast(
+          `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
+          'error'
+        );
       }
     };
 
