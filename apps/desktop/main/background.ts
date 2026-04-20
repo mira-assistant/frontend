@@ -1,5 +1,5 @@
 import './env';
-import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, type WebContents } from 'electron';
 import path from 'path';
 import {
   assertBackendMajorCompatible,
@@ -20,23 +20,35 @@ const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 let mainWindow: BrowserWindow | null = null;
 let currentClientName: string | null = null;
 
+const isDarwin = process.platform === 'darwin';
+
+function windowFromContents(contents: WebContents): BrowserWindow | null {
+  return BrowserWindow.fromWebContents(contents) ?? null;
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1500,
     height: 800,
     autoHideMenuBar: true,
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
-    ...(process.platform === 'win32'
-      ? {
-          // Keep native window controls visible while using a hidden title bar.
-          titleBarOverlay: true,
-        }
-      : {}),
+    backgroundColor: '#09090b',
+    ...(isDarwin
+      ? { titleBarStyle: 'hiddenInset' as const }
+      : {
+          frame: false,
+        }),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window:maximized-changed', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window:maximized-changed', false);
   });
 
   if (isDev) {
@@ -150,6 +162,29 @@ ipcMain.handle('client:get-name', async () => {
 
 ipcMain.handle('client:deregister', async () => {
   await deregisterClient();
+});
+
+ipcMain.handle('window:minimize', (event) => {
+  windowFromContents(event.sender)?.minimize();
+});
+
+ipcMain.handle('window:toggle-maximize', (event) => {
+  const win = windowFromContents(event.sender);
+  if (!win) return false;
+  if (win.isMaximized()) {
+    win.unmaximize();
+  } else {
+    win.maximize();
+  }
+  return win.isMaximized();
+});
+
+ipcMain.handle('window:close', (event) => {
+  windowFromContents(event.sender)?.close();
+});
+
+ipcMain.handle('window:is-maximized', (event) => {
+  return windowFromContents(event.sender)?.isMaximized() ?? false;
 });
 
 app.whenReady().then(async () => {

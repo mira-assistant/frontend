@@ -1,11 +1,15 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { personsApi } from '@dadei/ui/lib/api/persons';
 import { Person } from '@dadei/ui/types/models.types';
 import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { cn } from '@dadei/ui/lib/cn';
 import { Check, Trash2, X } from 'lucide-react';
+import {
+  useDeletePersonMutation,
+  usePersonsQuery,
+  useRenamePersonMutation,
+} from '@dadei/ui/lib/queryHooks';
 
 /** Below client tooltip (195); above main chrome. */
 const PEOPLE_DRAWER_Z = 170;
@@ -19,41 +23,26 @@ interface PeoplePanelProps {
 export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeoplePanelProps) {
   const { showToast } = useNotifications();
   const panelRef = useRef<HTMLDivElement>(null);
-
-  const [persons, setPersons] = useState<Person[]>([]);
-  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [armedPersonDeleteId, setArmedPersonDeleteId] = useState<string | null>(null);
+  const personsQuery = usePersonsQuery(isOpen);
+  const renamePersonMutation = useRenamePersonMutation();
+  const deletePersonMutation = useDeletePersonMutation();
+  const persons: Person[] = personsQuery.data ?? [];
+  const loading = personsQuery.isLoading;
 
-  // Load persons when panel opens
   useEffect(() => {
-    if (isOpen) {
-      loadPersons();
-    }
-  }, [isOpen]);
-
-  const loadPersons = async () => {
-    setLoading(true);
-    try {
-      const data = await personsApi.getAll();
-      setPersons(data);
-    } catch (error) {
-      console.error('Failed to load persons:', error);
+    if (personsQuery.isError) {
       showToast('Failed to load people', 'error');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [personsQuery.isError, showToast]);
 
   const handleRename = async (personId: string) => {
     if (!editName.trim()) return;
 
     try {
-      await personsApi.update(personId, { name: editName });
-      setPersons(prev => prev.map(p =>
-        p.id === personId ? { ...p, name: editName } : p
-      ));
+      await renamePersonMutation.mutateAsync({ personId, name: editName.trim() });
       setEditingId(null);
       setEditName('');
       showToast('Person renamed successfully', 'success');
@@ -65,8 +54,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
 
   const handleDeletePerson = async (personId: string) => {
     try {
-      await personsApi.delete(personId);
-      setPersons(prev => prev.filter(p => p.id !== personId));
+      await deletePersonMutation.mutateAsync(personId);
       showToast('Person deleted successfully', 'success');
       setArmedPersonDeleteId(null);
     } catch (error) {
@@ -205,6 +193,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                                 value={editName}
                                 onChange={(e) => setEditName(e.target.value)}
                                 onKeyDown={(e) => handleNameKeyDown(e, person.id)}
+                                disabled={renamePersonMutation.isPending}
                                 className="w-full rounded-md border border-emerald-500/35 bg-zinc-950/80 px-2 py-1 font-sans text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
                                 autoFocus
                                 placeholder="Enter name"
@@ -231,6 +220,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                               <>
                                 <button
                                   onClick={() => handleRename(person.id)}
+                                  disabled={renamePersonMutation.isPending}
                                   className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-950/50 text-emerald-300 transition-colors hover:bg-emerald-950/80"
                                   title="Save"
                                 >
@@ -276,6 +266,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                                             e.stopPropagation();
                                             void handleDeletePerson(person.id);
                                           }}
+                                          disabled={deletePersonMutation.isPending}
                                           className="flex h-7 w-7 items-center justify-center rounded-md text-emerald-400/95 transition-colors hover:bg-emerald-500/15"
                                         >
                                           <Check className="h-3.5 w-3.5" strokeWidth={2.5} />

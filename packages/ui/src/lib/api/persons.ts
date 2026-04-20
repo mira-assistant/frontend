@@ -50,11 +50,7 @@ export const personsApi = {
       formData.append('expected_text', updateData.expected_text);
     }
 
-    const { data } = await api.patch<Person>(endpoint, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const { data } = await api.patch<Person>(endpoint, formData);
 
     return data;
   },

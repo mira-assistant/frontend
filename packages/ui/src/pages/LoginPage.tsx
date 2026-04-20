@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import LoginOverlay from '@dadei/ui/components/modals/LoginModal';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
+import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
+import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
 
 function isSafeInternalPath(path: string): boolean {
   if (!path.startsWith('/') || path.startsWith('//') || path.includes('://')) return false;
@@ -29,10 +31,13 @@ export default function LoginPage() {
 
   if (isLoading || isAuthenticated) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950">
-        <div className="flex flex-col items-center gap-4">
-          <i className="fas fa-microphone-alt text-6xl text-emerald-400/80 animate-pulse" />
-          <p className="text-xl font-medium text-zinc-300 font-secondary">Loading…</p>
+      <div className="flex h-screen flex-col bg-zinc-950">
+        {isElectronCustomTitleBar() ? <DesktopTitleBarStrip /> : null}
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <i className="fas fa-microphone-alt text-6xl text-emerald-400/80 animate-pulse" />
+            <p className="text-xl font-medium text-zinc-300 font-secondary">Loading…</p>
+          </div>
         </div>
       </div>
     );

@@ -1,8 +1,10 @@
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useMicVAD } from '@ricky0123/vad-react';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface AudioContextType {
   isProcessing: boolean;
@@ -90,8 +92,10 @@ function encodeWAV(samples: Float32Array, sampleRate: number = 16000): ArrayBuff
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const { clientName, isServiceEnabled, registrationConflict } = useService();
+  const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVADReady, setIsVADReady] = useState(false);
+  const speechStartMsRef = useRef<number | null>(null);
 
   // VAD/ONNX assets live in `/public` and must resolve from the app origin,
   // not the current client route (e.g. `/assistant`).
@@ -107,7 +111,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     baseAssetPath: assetPath,
     onnxWASMBasePath: assetPath,
 
-    onSpeechStart: () => console.log("Speech started"),
+    onSpeechStart: () => {
+      speechStartMsRef.current = Date.now();
+      console.log('[VAD] Speech started at', speechStartMsRef.current);
+    },
     onVADMisfire: () => console.log("VAD misfire"),
     onSpeechEnd: async (audio: Float32Array) => {
       if (!hasSignificantAudio(audio)) {
@@ -118,8 +125,18 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       setIsProcessing(true);
 
       try {
+        const chunkEndMs = Date.now();
+        const approxStartFromAudioMs =
+          chunkEndMs - Math.round((audio.length / 16000) * 1000);
+        const chunkStartMs = speechStartMsRef.current ?? approxStartFromAudioMs;
+        speechStartMsRef.current = null;
+
         const wavBuffer = encodeWAV(audio, 16000);
-        await interactionsApi.register(wavBuffer, clientName);
+        await interactionsApi.register(wavBuffer, clientName, {
+          chunkStartMs,
+          chunkEndMs,
+        });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.interactions });
         console.log('[VAD] Audio sent successfully');
         setIsProcessing(false);
       } catch (error) {

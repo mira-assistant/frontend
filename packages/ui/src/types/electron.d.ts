@@ -15,6 +15,13 @@ export interface ActionWebhookPayload {
 }
 
 export interface ElectronAPI {
+  platform: NodeJS.Platform;
+  windowMinimize: () => Promise<void>;
+  windowToggleMaximize: () => Promise<boolean>;
+  windowClose: () => Promise<void>;
+  windowIsMaximized: () => Promise<boolean>;
+  onWindowMaximizedChanged: (callback: (isMaximized: boolean) => void) => () => void;
+
   storeTokens: (accessToken: string, refreshToken: string) => Promise<{ success: boolean; error?: string }>;
   getTokens: () => Promise<{ success: boolean; tokens?: { accessToken: string | null; refreshToken: string | null }; error?: string }>;
   clearTokens: () => Promise<{ success: boolean; error?: string }>;

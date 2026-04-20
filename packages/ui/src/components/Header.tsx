@@ -1,13 +1,18 @@
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings2, LogOut, Users } from 'lucide-react';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
+import { useServiceClientsQuery } from '@dadei/ui/lib/queryHooks';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@dadei/ui/lib/queryKeys';
 import Tooltip from '@dadei/ui/components/ui/Tooltip';
 import PeoplePanel from '@dadei/ui/components/PeoplePanel';
+import { DesktopWindowControls } from '@dadei/ui/components/DesktopWindowChrome';
 import { cn } from '@dadei/ui/lib/cn';
+import { isElectronCustomTitleBar } from '@dadei/ui/lib/electronWindowChrome';
 import { setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import logoUrl from '../assets/logo.png';
 
@@ -25,7 +30,9 @@ export default function Header({
   const { logout } = useAuth();
   const navigate = useNavigate();
   const { clientName, setClientName, registrationConflict } = useService();
+  const queryClient = useQueryClient();
   const peopleButtonRef = useRef<HTMLButtonElement>(null);
+  const serviceClientsQuery = useServiceClientsQuery(true);
 
   const [inputValue, setInputValue] = useState(clientName);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -33,34 +40,12 @@ export default function Header({
   const [isRegistering, setIsRegistering] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const clientListCache = useRef<string[]>([]);
-  const cacheTimestamp = useRef<number>(0);
-  const CACHE_DURATION = 30000;
-
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const latestCheckId = useRef(0);
 
   useEffect(() => {
     setInputValue(clientName);
   }, [clientName]);
-
-  const fetchClientList = useCallback(async (forceRefresh = false): Promise<string[]> => {
-    const now = Date.now();
-
-    if (!forceRefresh && now - cacheTimestamp.current < CACHE_DURATION && clientListCache.current.length > 0) {
-      return clientListCache.current;
-    }
-
-    try {
-      const response = await serviceApi.listClients();
-      clientListCache.current = response;
-      cacheTimestamp.current = now;
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch client list:', error);
-      return clientListCache.current;
-    }
-  }, []);
 
   const checkAvailability = useCallback(async (name: string, forceRefresh = false): Promise<boolean | null> => {
     if (!name || name.trim() === '') {
@@ -79,7 +64,13 @@ export default function Header({
     const checkId = ++latestCheckId.current;
 
     try {
-      const existingClients = await fetchClientList(forceRefresh);
+      const existingClients = forceRefresh
+        ? await queryClient.fetchQuery({
+            queryKey: queryKeys.serviceClients,
+            queryFn: () => serviceApi.listClients(),
+            staleTime: 0,
+          })
+        : (serviceClientsQuery.data ?? []);
       const available = !existingClients.includes(name);
       if (checkId !== latestCheckId.current) {
         return null;
@@ -100,7 +91,7 @@ export default function Header({
         setIsChecking(false);
       }
     }
-  }, [clientName, fetchClientList]);
+  }, [clientName, queryClient, serviceClientsQuery.data]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trim();
@@ -155,9 +146,7 @@ export default function Header({
 
         setClientName(newName);
         setIsAvailable(null);
-
-        clientListCache.current = [];
-        cacheTimestamp.current = 0;
+        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
 
         console.log(`Client renamed to: ${newName}`);
       } catch (error) {
@@ -189,19 +178,40 @@ export default function Header({
     return isAvailable === true ? 'success' : 'error';
   };
 
+  const customTitleBar = isElectronCustomTitleBar();
+
   return (
     <header
-      className="relative z-20 flex shrink-0 items-center justify-between border-b border-white/[0.08] bg-zinc-950/55 px-6 py-4 backdrop-blur-md"
+      className={cn(
+        'relative z-20 flex shrink-0 justify-between border-b border-white/[0.08] bg-zinc-950/55 px-6 py-4 backdrop-blur-md',
+        customTitleBar ? 'items-stretch' : 'items-center',
+      )}
       style={{ minHeight: 'var(--assistant-header-h, 4.75rem)' }}
     >
-      <div className="flex items-center gap-3">
+      <div
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-3',
+        )}
+        style={
+          customTitleBar
+            ? ({ WebkitAppRegion: 'drag' } as CSSProperties)
+            : undefined
+        }
+      >
         <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-emerald-400/95">
           <img src={logoUrl} alt="" className="h-9 w-9 rounded-lg object-cover ring-1 ring-white/10" />
           <span className="hidden font-brand sm:inline">dadei</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-4 sm:gap-6">
+      <div
+        className="flex items-center gap-4 sm:gap-6"
+        style={
+          customTitleBar
+            ? ({ WebkitAppRegion: 'no-drag' } as CSSProperties)
+            : undefined
+        }
+      >
         <div className="flex items-center gap-2">
           <label
             htmlFor="clientName"
@@ -281,6 +291,12 @@ export default function Header({
           onClose={() => setIsPeoplePanelOpen(false)}
           excludeElement={peopleButtonRef.current}
         />
+
+        {customTitleBar ? (
+          <div className="ml-2 flex self-stretch -mr-6">
+            <DesktopWindowControls />
+          </div>
+        ) : null}
       </div>
     </header>
   );

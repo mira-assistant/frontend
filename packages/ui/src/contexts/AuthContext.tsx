@@ -4,6 +4,8 @@ import { api } from '@dadei/ui/shared/api/client';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
 import { AuthTokens, LoginCredentials, RegisterData, UserMe } from '@dadei/ui/types/auth.types';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -53,6 +55,7 @@ async function clearAllStoredTokens(): Promise<void> {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,12 +71,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const me = await authApi.me();
+      const me = await queryClient.fetchQuery({
+        queryKey: queryKeys.authMe,
+        queryFn: () => authApi.me(),
+        staleTime: 0,
+      });
       setUser(me);
     } catch {
       setUser(null);
     }
-  }, []);
+  }, [queryClient]);
 
   // Setup axios interceptors once; read tokens from tokensRef so Authorization is never stale.
   useEffect(() => {
@@ -125,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             applyTokens(null);
             setIsAuthenticated(false);
             setUser(null);
+            queryClient.removeQueries({ queryKey: queryKeys.authMe });
 
             return Promise.reject(_refreshError);
           }
@@ -138,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       api.interceptors.request.eject(requestIntercept);
       api.interceptors.response.eject(responseIntercept);
     };
-  }, [applyTokens]);
+  }, [applyTokens, queryClient]);
 
   // Initialize auth state on mount - verify tokens with refresh
   useEffect(() => {
@@ -160,12 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             applyTokens(newTokens);
             setIsAuthenticated(true);
 
-            try {
-              const me = await authApi.me();
-              setUser(me);
-            } catch {
-              setUser(null);
-            }
+            await refreshUser();
 
             console.log('Authentication verified');
           } catch (_refreshError) {
@@ -174,6 +177,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             applyTokens(null);
             setIsAuthenticated(false);
             setUser(null);
+            queryClient.removeQueries({ queryKey: queryKeys.authMe });
           }
         } else {
           console.log('No stored tokens found');
@@ -188,7 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, [applyTokens]);
+  }, [applyTokens, queryClient, refreshUser]);
 
   const login = useCallback(async (credentials: LoginCredentials) => {
     try {
@@ -204,19 +208,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       applyTokens(newTokens);
       setIsAuthenticated(true);
 
-      try {
-        const me = await authApi.me();
-        setUser(me);
-      } catch {
-        setUser(null);
-      }
+      await refreshUser();
 
       console.log('Logged in successfully');
     } catch (error: any) {
       console.error('Login error:', error);
       throw new Error(error.response?.data?.detail || error.message || 'Login failed');
     }
-  }, [applyTokens]);
+  }, [applyTokens, refreshUser]);
 
   const register = useCallback(async (data: RegisterData) => {
     try {
@@ -232,19 +231,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       applyTokens(newTokens);
       setIsAuthenticated(true);
 
-      try {
-        const me = await authApi.me();
-        setUser(me);
-      } catch {
-        setUser(null);
-      }
+      await refreshUser();
 
       console.log('Registered successfully');
     } catch (error: any) {
       console.error('Registration error:', error);
       throw new Error(error.response?.data?.detail || error.message || 'Registration failed');
     }
-  }, [applyTokens]);
+  }, [applyTokens, refreshUser]);
 
   const logout = useCallback(async () => {
     try {
@@ -253,24 +247,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       applyTokens(null);
       setIsAuthenticated(false);
       setUser(null);
+      queryClient.removeQueries({ queryKey: queryKeys.authMe });
 
       console.log('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, [applyTokens]);
+  }, [applyTokens, queryClient]);
 
   const saveTokens = useCallback(async (newTokens: AuthTokens) => {
     await persistTokens(newTokens.accessToken, newTokens.refreshToken);
     applyTokens(newTokens);
     setIsAuthenticated(true);
-    try {
-      const me = await authApi.me();
-      setUser(me);
-    } catch {
-      setUser(null);
-    }
-  }, [applyTokens]);
+    await refreshUser();
+  }, [applyTokens, refreshUser]);
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     return tokens?.accessToken ?? null;

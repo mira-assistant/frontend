@@ -6,6 +6,8 @@ import { serviceApi } from '@dadei/ui/lib/api/service';
 import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
@@ -61,6 +63,7 @@ function readInitialClientName(): string {
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
   const { showToast } = useNotifications();
+  const queryClient = useQueryClient();
   const getAccessTokenRef = useRef(getAccessToken);
   getAccessTokenRef.current = getAccessToken;
 
@@ -130,8 +133,9 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) {
       stopRealtimeClient();
       setRegistrationConflict(false);
+      queryClient.removeQueries({ queryKey: queryKeys.serviceClients });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, queryClient]);
 
   useEffect(() => {
     setRegistrationConflict(false);
@@ -215,6 +219,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
           setIsConnected(true);
           isRegisteredRef.current = true;
           shouldResolveAutoClientNameRef.current = false;
+          void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
           console.log(`Client ${idAtStart} registered`);
 
           startRealtimeClient({
@@ -269,7 +274,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     return () => {
       registerCancelled = true;
     };
-  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, showToast]);
+  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, queryClient, showToast]);
 
   useEffect(() => {
     if (!isAuthenticated || !isConnected) return;
@@ -304,6 +309,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
         stopRealtimeClient();
         await serviceApi.deregisterClient(clientName);
         isRegisteredRef.current = false;
+        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
         console.log(`Client ${clientName} deregistered`);
       } catch (error) {
         console.error('Failed to deregister client:', error);
@@ -321,7 +327,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('pagehide', handlePageHide);
       deregisterClient();
     };
-  }, [clientName, isAuthenticated, isConnected]);
+  }, [clientName, isAuthenticated, isConnected, queryClient]);
 
   useEffect(() => {
     const handleServiceStatusChanged = (status: { enabled: boolean }) => {
