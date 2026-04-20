@@ -133,9 +133,9 @@ function LaunchConversationIntro() {
       side: 'left',
       text: 'i\'m too lazy to even update my reminders.',
       appearAt: 3.4,
-      readFor: 2.2,
+      readFor: 2.5,
     },
-    { side: 'right', text: 'you guys should try dadei', appearAt: 5.8, readFor: 1.5 },
+    { side: 'right', text: 'you guys should try dadei', appearAt: 5.9, readFor: 1.5 },
   ] as const;
   const finalMessage = launchMessages[launchMessages.length - 1];
   const arrowRevealDelay = finalMessage.appearAt + finalMessage.readFor;
