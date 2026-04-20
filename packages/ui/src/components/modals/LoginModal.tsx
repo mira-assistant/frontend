@@ -12,7 +12,7 @@ import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 const veilEase = [0.22, 1, 0.36, 1] as const;
 
 const glassInput =
-  'w-full rounded-xl border border-white/10 bg-zinc-900/55 px-3.5 py-2.5 font-sans text-sm text-zinc-100 shadow-inner shadow-black/30 placeholder:text-zinc-500 backdrop-blur-md transition-[border-color,background-color,box-shadow,opacity] duration-200 focus:border-emerald-500/45 focus:bg-zinc-900/75 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40';
+  'w-full rounded-xl border border-white/10 bg-zinc-900/55 px-3.5 py-2.5 font-primary text-sm text-zinc-100 shadow-inner shadow-black/30 placeholder:text-zinc-500 backdrop-blur-md transition-[border-color,background-color,box-shadow,opacity] duration-200 focus:border-emerald-500/45 focus:bg-zinc-900/75 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-40';
 
 type LoginOverlayProps = {
   onAuthenticated?: () => void;
@@ -290,7 +290,7 @@ export default function LoginOverlay({
                   setError('');
                 }}
                 disabled={loading}
-                className="font-sans font-semibold text-emerald-400/95 transition-colors hover:text-emerald-300 disabled:opacity-50"
+                className="font-primary font-semibold text-emerald-400/95 transition-colors hover:text-emerald-300 disabled:opacity-50"
               >
                 {isLoginMode ? 'Create one' : 'Sign In'}
               </button>

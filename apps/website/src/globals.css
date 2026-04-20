@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+@layer utilities {
+  .font-primary {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+  }
+
+  .font-secondary {
+    font-family: "Josefin Sans", system-ui, sans-serif;
+  }
+
+  .font-brand {
+    font-family: "Poiret One", system-ui, sans-serif;
+  }
+
+  .font-display {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+  }
+}
+
 /* Tailwind v4: register sources (config `content` is not used by @tailwindcss/postcss). */
 @source "..";
 @source "../../../packages/ui/src";
@@ -9,7 +27,7 @@
 }
 
 body {
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: "Space Grotesk", system-ui, sans-serif;
   overflow-x: hidden;
 }
 

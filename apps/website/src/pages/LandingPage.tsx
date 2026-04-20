@@ -111,7 +111,7 @@ function SectionHeading({
       <p className="mb-3 text-xs tracking-[0.22em] text-emerald-300/75 font-secondary">
         {eyebrow}
       </p>
-      <h2 className="font-sans text-3xl leading-tight tracking-tight text-zinc-100 sm:text-4xl lg:text-5xl">
+      <h2 className="font-primary text-3xl leading-tight tracking-tight text-zinc-100 sm:text-4xl lg:text-5xl">
         {title}
       </h2>
       <p className="mt-5 text-base leading-relaxed text-zinc-300 sm:text-lg font-secondary">{body}</p>
@@ -222,14 +222,14 @@ function PluginShowcase() {
       icon: Globe,
       name: 'google workspace',
       short: 'calendar + gmail + contacts sync',
-      command: 'dadei, pull last conversation context with jason and prep follow-up.',
+      command: 'dadei, pull last conversation context with andrew and prep follow-up.',
       output: ['contact context loaded', 'last thread summarized', 'next-step draft prepared'],
     },
     {
       icon: CalendarDays,
       name: 'google calendar',
       short: 'events + availability + reminders',
-      command: 'dadei, schedule 30 min with jason tomorrow afternoon and remind me 20 min before.',
+      command: 'dadei, schedule 30 min with john tomorrow afternoon and remind me 20 min before.',
       output: ['best slot selected', 'calendar event created', 'reminder queued'],
     },
     {
@@ -396,7 +396,7 @@ export default function LandingPage() {
               />
               <p className="mt-8 max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/60 px-5 py-4 text-sm leading-relaxed text-zinc-300 font-secondary">
                 <span className="font-medium text-emerald-200">
-                  "who was i just talking to?" "when did i last talk to jason?"
+                  "who was i just talking to?" "when did i last talk to mark?"
                 </span>{' '}
                 dadei is built for those moments. trigger it like a voice assistant when you want something
                 done fast.
@@ -419,7 +419,7 @@ export default function LandingPage() {
               className="relative z-10"
             >
               <p className="text-xs tracking-[0.22em] text-emerald-200/80 font-secondary">why dadei?</p>
-              <h2 className="mt-3 max-w-4xl font-sans text-3xl leading-tight text-zinc-100 sm:text-4xl lg:text-5xl">
+              <h2 className="mt-3 max-w-4xl font-primary text-3xl leading-tight text-zinc-100 sm:text-4xl lg:text-5xl">
                 named after my grandmother, dadi.
               </h2>
               <p className="mt-6 max-w-3xl text-base leading-relaxed text-zinc-300 font-secondary sm:text-lg">
@@ -508,7 +508,7 @@ export default function LandingPage() {
                 <p className="text-xs tracking-[0.2em] text-emerald-200/80 font-secondary">
                   Desktop first momentum
                 </p>
-                <h2 className="mt-3 font-sans text-3xl leading-tight text-zinc-50 sm:text-4xl">
+                <h2 className="mt-3 font-primary text-3xl leading-tight text-zinc-50 sm:text-4xl">
                   Keep Dadei close on your desktop.
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-200/90 font-secondary">

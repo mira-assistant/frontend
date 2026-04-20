@@ -63,10 +63,10 @@ export default function Header({
     try {
       const existingClients = forceRefresh
         ? await queryClient.fetchQuery({
-            queryKey: queryKeys.serviceClients,
-            queryFn: () => serviceApi.listClients(),
-            staleTime: 0,
-          })
+          queryKey: queryKeys.serviceClients,
+          queryFn: () => serviceApi.listClients(),
+          staleTime: 0,
+        })
         : (serviceClientsQuery.data ?? []);
       const available = !existingClients.includes(name);
       if (checkId !== latestCheckId.current) {
@@ -180,13 +180,15 @@ export default function Header({
       className="relative z-20 flex shrink-0 items-center justify-between border-b border-white/8 bg-zinc-950/55 px-6 py-4 backdrop-blur-md"
       style={{ minHeight: 'var(--assistant-header-h, 4.75rem)' }}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <div className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-emerald-400/95">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900/70 ring-1 ring-white/10">
-            <Mic className="h-5 w-5 text-emerald-300" strokeWidth={2} aria-hidden="true" />
-          </span>
-          <span className="hidden font-brand sm:inline">dadei</span>
-        </div>
+      <div className="flex min-w-0 flex-1 items-center gap-4 text-lg font-semibold tracking-tight text-emerald-400/95">
+        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-zinc-900/70 ring-1 ring-white/10">
+          <Mic className="h-5 w-5 text-emerald-300" strokeWidth={2} aria-hidden="true" />
+        </span>
+        <span className="hidden font-brand text-3xl font-extrabold tracking-widest sm:inline">
+          dadei
+        </span>
+
+
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">
@@ -214,7 +216,7 @@ export default function Header({
                 maxLength={50}
                 placeholder="web-client"
                 className={cn(
-                  'w-[120px] rounded-xl border-2 bg-zinc-900/80 px-2.5 py-1.5 text-center font-sans text-sm text-zinc-100 shadow-inner shadow-black/20 transition-all duration-300 placeholder:text-zinc-600 focus:bg-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-[140px]',
+                  'w-[120px] rounded-xl border-2 bg-zinc-900/80 px-2.5 py-1.5 text-center font-primary text-sm text-zinc-100 shadow-inner shadow-black/20 transition-all duration-300 placeholder:text-zinc-600 focus:bg-zinc-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:w-[140px]',
                   getBorderColor()
                 )}
               />

@@ -142,7 +142,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
               value={deletePhrase}
               onChange={(e) => setDeletePhrase(e.target.value)}
               placeholder="Your email"
-              className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2 font-sans text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
+              className="mt-4 w-full rounded-xl border border-white/10 bg-zinc-950/80 px-3 py-2 font-primary text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500/40 focus:outline-none focus:ring-2 focus:ring-rose-500/25"
               autoComplete="off"
             />
             <div className="mt-6 flex justify-end gap-3">

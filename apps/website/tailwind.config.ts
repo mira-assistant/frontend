@@ -10,12 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        /** Orbitron — interaction copy, headings, UI body */
-        sans: ['Orbitron', 'system-ui', 'sans-serif'],
-        /** Montserrat — metadata, labels, hints */
-        secondary: ['Montserrat', 'system-ui', 'sans-serif'],
-        /** Orbitron — wordmark and marketing-style titles */
-        brand: ['Orbitron', 'system-ui', 'sans-serif'],
+        primary: ['Space Grotesk', 'system-ui', 'sans-serif'],
+        secondary: ['Josefin Sans', 'system-ui', 'sans-serif'],
+        brand: ['Poiret One', 'system-ui', 'sans-serif'],
       },
     },
   },

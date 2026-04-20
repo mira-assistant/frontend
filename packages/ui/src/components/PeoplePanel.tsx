@@ -194,7 +194,7 @@ export default function PeoplePanel({ isOpen, onClose, excludeElement }: PeopleP
                                 onChange={(e) => setEditName(e.target.value)}
                                 onKeyDown={(e) => handleNameKeyDown(e, person.id)}
                                 disabled={renamePersonMutation.isPending}
-                                className="w-full rounded-md border border-emerald-500/35 bg-zinc-950/80 px-2 py-1 font-sans text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
+                                className="w-full rounded-md border border-emerald-500/35 bg-zinc-950/80 px-2 py-1 font-primary text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/25"
                                 autoFocus
                                 placeholder="Enter name"
                               />
