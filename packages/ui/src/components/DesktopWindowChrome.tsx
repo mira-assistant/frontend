@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react';
 import { Copy, Minus, Square, X } from 'lucide-react';
 import { cn } from '@dadei/ui/lib/cn';
-import { isElectronDesktop, isElectronMac, needsCustomWindowControls } from '@dadei/ui/lib/electronWindowChrome';
+import {
+  DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS,
+  isElectronDesktop,
+  isElectronMac,
+  needsCustomWindowControls,
+} from '@dadei/ui/lib/electronWindowChrome';
 
 function useMaximizedState() {
   const api = typeof window !== 'undefined' ? window.electronAPI : undefined;
@@ -80,8 +85,14 @@ export function DesktopTitleBarStrip() {
 
   return (
     <div
-      className="relative z-50 flex w-full shrink-0 border-b border-white/8 bg-zinc-950/90 backdrop-blur-md h-8 items-center"
-      style={{ WebkitAppRegion: 'drag' } as CSSProperties}
+      className="relative z-50 flex w-full shrink-0 border-b border-white/8 bg-zinc-950/90 backdrop-blur-md items-center"
+      style={
+        {
+          height: DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS,
+          minHeight: DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS,
+          WebkitAppRegion: 'drag',
+        } as CSSProperties
+      }
     >
       <span
         className={cn(

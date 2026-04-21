@@ -145,7 +145,7 @@ export default function LoginOverlay({
           />
 
           <div className="relative mb-8 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 font-primary">Welcome to Dadei</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-50 font-primary">Welcome to dadei</h1>
             <p className="mt-2 text-sm text-zinc-500 font-secondary">
               Sign in to your intelligent voice workspace
             </p>

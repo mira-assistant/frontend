@@ -14,3 +14,6 @@ export function isElectronMac(): boolean {
 export function needsCustomWindowControls(): boolean {
   return isElectronDesktop() && !isElectronMac();
 }
+
+/** Pixel height of `DesktopTitleBarStrip` as CSS length; keep in sync with that component. */
+export const DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS = '2rem';

@@ -390,7 +390,7 @@ export default function LandingPage() {
           <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
             <div>
               <SectionHeading
-                eyebrow="Meet Dadei"
+                eyebrow="Meet dadei"
                 title="the assistant you forget about, until you need it."
                 body="dadei keeps your context organized across your day, then shows up instantly when you ask for it."
               />
@@ -507,10 +507,10 @@ export default function LandingPage() {
                   Desktop first momentum
                 </p>
                 <h2 className="mt-2 font-primary text-3xl leading-tight text-zinc-50 sm:text-4xl">
-                  Keep Dadei close on your desktop.
+                  Keep dadei close on your desktop.
                 </h2>
                 <p className="mt-4 max-w-2xl text-base leading-relaxed text-zinc-200/90 font-secondary">
-                  If you are serious about not dropping tasks, start with desktop. It keeps Dadei one click
+                  If you are serious about not dropping tasks, start with desktop. It keeps dadei one click
                   away so capturing and acting on reminders stays fast all day.
                 </p>
               </div>
@@ -540,7 +540,7 @@ export default function LandingPage() {
         <div className="mx-auto flex w-full max-w-[1240px] flex-col items-center justify-between gap-5 px-5 sm:flex-row sm:px-8">
           <div className="flex items-center gap-4 text-zinc-400">
             <Mic className="h-5 w-5 text-emerald-300" aria-hidden />
-            <span className="font-semibold text-zinc-100 text-xl font-brand">Dadei</span>
+            <span className="font-semibold text-zinc-100 text-xl font-brand">dadei</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-300 font-secondary">
             <a

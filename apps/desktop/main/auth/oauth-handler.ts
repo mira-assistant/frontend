@@ -57,7 +57,7 @@ export async function handleGoogleOAuth(): Promise<{ code: string; state: string
               <head><meta charset="utf-8"><title>Sign-in complete</title></head>
               <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; padding: 24px;">
                 <h2>Sign-in complete</h2>
-                <p>You can close this tab and return to Dadei.</p>
+                <p>You can close this tab and return to dadei.</p>
                 <script>window.close();</script>
               </body>
             </html>

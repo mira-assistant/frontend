@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useReducedMotion } from 'framer-motion';
 import { useQueries, useQueryClient } from '@tanstack/react-query';
 import type { Conversation, Interaction, Person } from '@dadei/ui/types/models.types';
@@ -79,10 +80,38 @@ export function useInteractionPanel() {
     [recentConversationsQuery.data]
   );
 
-  const interactionsBootstrapKey = useMemo(() => [...recentIds].sort().join('\u001f'), [recentIds]);
+  /**
+   * Conversation IDs returned by GET /conversations/recent are capped; realtime interactions
+   * can reference an older active conversation. Track those extras so bootstrap refetches include them.
+   */
+  const [extraBootstrapConversationIds, setExtraBootstrapConversationIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setExtraBootstrapConversationIds([]);
+    }
+  }, [isConnected]);
+
+  const idsForBootstrapFetch = useMemo(() => {
+    const ids = new Set<string>();
+    for (const id of recentIds) {
+      const t = id?.trim();
+      if (t) ids.add(t);
+    }
+    for (const id of extraBootstrapConversationIds) {
+      const t = id?.trim();
+      if (t) ids.add(t);
+    }
+    return Array.from(ids).sort();
+  }, [extraBootstrapConversationIds, recentIds]);
+
+  const interactionsBootstrapKey = useMemo(
+    () => idsForBootstrapFetch.join('\u001f'),
+    [idsForBootstrapFetch]
+  );
 
   const interactionsBootstrapQuery = useInteractionsBootstrapQuery(
-    recentIds,
+    idsForBootstrapFetch,
     isConnected && (recentConversationsQuery.isSuccess || recentConversationsQuery.isError)
   );
 
@@ -217,12 +246,14 @@ export function useInteractionPanel() {
     if (!isConnected) return;
 
     const mergeIntoCaches = (interaction: Interaction) => {
-      const bootstrapKey = queryKeys.interactionsBootstrap(interactionsBootstrapKey);
-      queryClient.setQueryData<Interaction[]>(bootstrapKey, prev => {
-        if (!prev) return [interaction];
-        if (prev.some(item => item.id === interaction.id)) return prev;
-        return [...prev, interaction];
-      });
+      queryClient.setQueriesData<Interaction[]>(
+        { queryKey: [...queryKeys.interactions, 'bootstrap'] },
+        prev => {
+          if (!prev) return [interaction];
+          if (prev.some(item => item.id === interaction.id)) return prev;
+          return [...prev, interaction];
+        }
+      );
       queryClient.setQueryData<Interaction[]>(queryKeys.interactions, prev => {
         if (!prev) return [interaction];
         if (prev.some(item => item.id === interaction.id)) return prev;
@@ -231,6 +262,11 @@ export function useInteractionPanel() {
       const convId = interaction.conversation_id?.trim();
       if (convId) {
         void queryClient.prefetchQuery(conversationQueryOptions(convId));
+        setExtraBootstrapConversationIds(prev => {
+          if (prev.some(x => x.trim() === convId)) return prev;
+          if (recentIds.some(x => x.trim() === convId)) return prev;
+          return [...prev, convId];
+        });
       }
     };
 
@@ -280,7 +316,7 @@ export function useInteractionPanel() {
       offWs();
       if (offElectron) offElectron();
     };
-  }, [isConnected, queryClient, interactionsBootstrapKey]);
+  }, [isConnected, queryClient, interactionsBootstrapKey, recentIds]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -302,12 +338,38 @@ export function useInteractionPanel() {
   const patchInteractionCaches = (
     updater: (prev: Interaction[] | undefined) => Interaction[] | undefined
   ) => {
-    queryClient.setQueryData<Interaction[]>(
-      queryKeys.interactionsBootstrap(interactionsBootstrapKey),
+    queryClient.setQueriesData<Interaction[]>(
+      { queryKey: [...queryKeys.interactions, 'bootstrap'] },
       updater
     );
     queryClient.setQueryData<Interaction[]>(queryKeys.interactions, updater);
   };
+
+  /** Drop cached interactions tied to a conversation row the API no longer has (stale client state). */
+  useEffect(() => {
+    if (!isConnected) return;
+    for (let i = 0; i < conversationQueries.length; i++) {
+      const q = conversationQueries[i];
+      const id = conversationIds[i];
+      if (!id?.trim() || !q?.isError) continue;
+      const err = q.error;
+      if (!isAxiosError(err) || err.response?.status !== 404) continue;
+      const cid = id.trim();
+      setExtraBootstrapConversationIds(prev => prev.filter(x => x.trim() !== cid));
+      queryClient.setQueriesData<Interaction[]>(
+        { queryKey: [...queryKeys.interactions, 'bootstrap'] },
+        prev => (prev ?? []).filter(i => (i.conversation_id?.trim() ?? '') !== cid)
+      );
+      queryClient.setQueryData<Interaction[]>(queryKeys.interactions, prev =>
+        (prev ?? []).filter(i => (i.conversation_id?.trim() ?? '') !== cid)
+      );
+      queryClient.setQueryData<Conversation[]>(
+        queryKeys.conversationsRecent(INTERACTION_PANEL_RECENT_LIMIT),
+        prev => (prev ?? []).filter(c => c.id !== cid)
+      );
+      queryClient.removeQueries({ queryKey: queryKeys.conversationById(cid) });
+    }
+  }, [isConnected, conversationQueries, conversationIds, queryClient]);
 
   const handleDeleteInteraction = async (interactionId: string) => {
     try {
@@ -329,12 +391,14 @@ export function useInteractionPanel() {
         g => g.conversation?.id === conversationId || groupKey(g) === conversationId
       );
       if (!group) {
+        showToast('Conversation not found', 'error');
         setArmedConversationDeleteId(null);
         return;
       }
 
       await conversationsApi.delete(conversationId);
       const cid = conversationId.trim();
+      setExtraBootstrapConversationIds(prev => prev.filter(x => x.trim() !== cid));
       patchInteractionCaches(previous =>
         (previous ?? []).filter(i => (i.conversation_id?.trim() ?? '') !== cid)
       );
@@ -343,6 +407,7 @@ export function useInteractionPanel() {
         queryKeys.conversationsRecent(INTERACTION_PANEL_RECENT_LIMIT),
         prev => (prev ?? []).filter(c => c.id !== conversationId)
       );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interactions });
 
       showToast('Conversation deleted', 'success');
       setArmedConversationDeleteId(null);
@@ -367,11 +432,13 @@ export function useInteractionPanel() {
           }
         })
       );
+      setExtraBootstrapConversationIds([]);
       patchInteractionCaches(() => []);
       removeAllConversationQueries(queryClient);
       void queryClient.invalidateQueries({
         queryKey: queryKeys.conversationsRecent(INTERACTION_PANEL_RECENT_LIMIT),
       });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.interactions });
       void queryClient.invalidateQueries({ queryKey: queryKeys.persons });
       showToast('All interactions cleared', 'success');
     } catch (error) {

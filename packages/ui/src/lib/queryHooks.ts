@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { actionsApi } from '@dadei/ui/lib/api/actions';
 import { memoriesApi } from '@dadei/ui/lib/api/memories';
 import { personsApi } from '@dadei/ui/lib/api/persons';
@@ -23,6 +24,10 @@ export function conversationQueryOptions(conversationId: string) {
     queryKey: queryKeys.conversationById(conversationId),
     queryFn: (): Promise<Conversation> => conversationsApi.getById(conversationId),
     staleTime: CONVERSATION_STALE_MS,
+    retry: (failureCount: number, error: unknown) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   };
 }
 
@@ -152,6 +157,7 @@ export function useInteractionsBootstrapQuery(
     queryFn: () => interactionsApi.getBootstrapForConversations(conversationIds, { limit }),
     enabled,
     staleTime: INTERACTIONS_BOOTSTRAP_STALE_MS,
+    placeholderData: keepPreviousData,
   });
 }
 

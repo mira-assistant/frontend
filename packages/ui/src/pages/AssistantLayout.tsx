@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useLayoutEffect, useState, type CSSProperties } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
@@ -11,7 +11,7 @@ import InteractionPanel from '@dadei/ui/components/interaction-panel';
 import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
 import { useMemoriesQuery, useActionsQuery } from '@dadei/ui/lib/queryHooks';
-import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
+import { DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS, isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 
@@ -27,6 +27,20 @@ export default function AssistantLayout() {
   const prefetchData = isAuthenticated && !isLoading;
   useMemoriesQuery(prefetchData);
   useActionsQuery(prefetchData);
+
+  /** Portaled overlays (e.g. PeoplePanel) read chrome offsets from `html`, not the assistant shell. */
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      '--assistant-titlebar-offset',
+      isElectronDesktop() ? DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS : '0px',
+    );
+    root.style.setProperty('--assistant-header-h', '4.75rem');
+    return () => {
+      root.style.removeProperty('--assistant-titlebar-offset');
+      root.style.removeProperty('--assistant-header-h');
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -67,7 +81,6 @@ export default function AssistantLayout() {
           ['--assistant-accent-muted' as string]: 'rgb(6 95 70)',
           ['--assistant-surface' as string]: 'rgba(24 24 27 / 0.72)',
           ['--assistant-border' as string]: 'rgba(255, 255, 255, 0.08)',
-          ['--assistant-header-h' as string]: '4.75rem',
         } as CSSProperties
       }
     >

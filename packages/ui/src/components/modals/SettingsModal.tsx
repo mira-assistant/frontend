@@ -91,7 +91,7 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-240 bg-zinc-950/65 backdrop-blur-md" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-250 flex h-[min(94dvh,56rem)] w-[min(96vw,90rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/94 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl focus:outline-none">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-250 flex h-[min(92dvh,52rem)] w-[min(95vw,80rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-900/94 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl focus:outline-none">
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
             <div>
               <Dialog.Title className="text-lg font-semibold tracking-tight text-zinc-50">
