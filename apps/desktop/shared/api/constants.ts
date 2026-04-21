@@ -40,4 +40,7 @@ export const ENDPOINTS = {
   // Conversations
   CONVERSATIONS: '/conversations',
   CONVERSATION_BY_ID: '/conversations/:conversationId',
+
+  MEMORIES: '/memories',
+  MEMORY_ACTIONS: '/memories/actions',
 } as const;

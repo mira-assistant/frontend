@@ -1,14 +1,17 @@
-import { useState, type CSSProperties } from 'react';
+import { useLayoutEffect, useState, type CSSProperties } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
 import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
+import ActionsRealtimeSync from '@dadei/ui/components/ui/ActionsRealtimeSync';
+import EpisodicMemoryRealtimeSync from '@dadei/ui/components/ui/EpisodicMemoryRealtimeSync';
 import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/interaction-panel';
 import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
-import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
+import { useMemoriesQuery, useActionsQuery } from '@dadei/ui/lib/queryHooks';
+import { DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS, isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
 
@@ -20,6 +23,24 @@ export default function AssistantLayout() {
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
+
+  const prefetchData = isAuthenticated && !isLoading;
+  useMemoriesQuery(prefetchData);
+  useActionsQuery(prefetchData);
+
+  /** Portaled overlays (e.g. PeoplePanel) read chrome offsets from `html`, not the assistant shell. */
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      '--assistant-titlebar-offset',
+      isElectronDesktop() ? DESKTOP_TITLEBAR_STRIP_HEIGHT_CSS : '0px',
+    );
+    root.style.setProperty('--assistant-header-h', '4.75rem');
+    return () => {
+      root.style.removeProperty('--assistant-titlebar-offset');
+      root.style.removeProperty('--assistant-header-h');
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -60,7 +81,6 @@ export default function AssistantLayout() {
           ['--assistant-accent-muted' as string]: 'rgb(6 95 70)',
           ['--assistant-surface' as string]: 'rgba(24 24 27 / 0.72)',
           ['--assistant-border' as string]: 'rgba(255, 255, 255, 0.08)',
-          ['--assistant-header-h' as string]: '4.75rem',
         } as CSSProperties
       }
     >
@@ -74,6 +94,8 @@ export default function AssistantLayout() {
       />
 
       <ActionWebhookBanners />
+      <EpisodicMemoryRealtimeSync />
+      <ActionsRealtimeSync />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}

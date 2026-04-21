@@ -43,4 +43,8 @@ export const ENDPOINTS = {
   // Conversations
   CONVERSATIONS: '/conversations',
   CONVERSATION_BY_ID: '/conversations/:conversationId',
+
+  // Network memory API (v2 when BETA=true): episodic facts + structured actions on same router
+  MEMORIES: '/memories',
+  MEMORY_ACTIONS: '/memories/actions',
 } as const;

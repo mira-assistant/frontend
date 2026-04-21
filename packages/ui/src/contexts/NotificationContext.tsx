@@ -15,7 +15,7 @@ import { cn } from '@dadei/ui/lib/cn';
 import { teardropEnter, teardropExit } from '@dadei/ui/lib/motion';
 import { ToastType } from '@dadei/ui/types/models.types';
 
-const DEFAULT_BANNER_DURATION_MS = 14_000;
+const DEFAULT_BANNER_DURATION_MS = 10_000;
 
 export type ShowBannerInput = {
   id?: string;
@@ -62,7 +62,7 @@ function ToastStackHost() {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-5 right-5 z-[180] flex max-w-sm flex-col-reverse gap-2"
+      className="pointer-events-none fixed bottom-5 right-5 z-180 flex max-w-sm flex-col-reverse gap-2"
       aria-live="polite"
     >
       {toasts.map((toast) => (
@@ -149,7 +149,10 @@ export function NotificationBannerSlot({ className }: { className?: string }) {
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [banner, setBanner] = useState<BannerItem | null>(null);
+  /** FIFO: only the head is shown; advancing is dismiss or duration expiry (see NotificationBannerSlot). */
+  const [bannerQueue, setBannerQueue] = useState<BannerItem[]>([]);
+
+  const banner = bannerQueue.length > 0 ? bannerQueue[0] : null;
 
   const showToast = useCallback((message: string, type: ToastType) => {
     const id = newId();
@@ -161,17 +164,15 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissBanner = useCallback(() => {
-    setBanner(null);
+    setBannerQueue((prev) => prev.slice(1));
   }, []);
 
   const showBanner = useCallback((input: ShowBannerInput) => {
     const id = input.id ?? newId();
     const durationMs = input.durationMs ?? DEFAULT_BANNER_DURATION_MS;
-    setBanner({
-      id,
-      title: input.title,
-      body: input.body,
-      durationMs,
+    setBannerQueue((prev) => {
+      if (prev.some((b) => b.id === id)) return prev;
+      return [...prev, { id, title: input.title, body: input.body, durationMs }];
     });
     return id;
   }, []);

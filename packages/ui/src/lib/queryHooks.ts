@@ -1,16 +1,22 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
+import { actionsApi } from '@dadei/ui/lib/api/actions';
+import { memoriesApi } from '@dadei/ui/lib/api/memories';
 import { personsApi } from '@dadei/ui/lib/api/persons';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
 import { conversationsApi } from '@dadei/ui/lib/api/conversations';
 import { serviceApi } from '@dadei/ui/lib/api/service';
 import { authApi } from '@dadei/ui/lib/api/auth';
-import type { Conversation } from '@dadei/ui/types/models.types';
-import type { Person } from '@dadei/ui/types/models.types';
+import type { Conversation, Person } from '@dadei/ui/types/models.types';
 import type { UserMe } from '@dadei/ui/types/auth.types';
 import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 const CONVERSATION_STALE_MS = 5 * 60_000;
+const INTERACTIONS_BOOTSTRAP_STALE_MS = 30_000;
+
+/** Recent conversation page size for the interaction panel bootstrap. */
+export const INTERACTION_PANEL_RECENT_LIMIT = 10;
 
 /** Shared options so every code path (useQueries, prefetch, realtime) hits the same cache shape. */
 export function conversationQueryOptions(conversationId: string) {
@@ -18,6 +24,10 @@ export function conversationQueryOptions(conversationId: string) {
     queryKey: queryKeys.conversationById(conversationId),
     queryFn: (): Promise<Conversation> => conversationsApi.getById(conversationId),
     staleTime: CONVERSATION_STALE_MS,
+    retry: (failureCount: number, error: unknown) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   };
 }
 
@@ -96,6 +106,58 @@ export function useInteractionsQuery(enabled = true) {
     queryKey: queryKeys.interactions,
     queryFn: () => interactionsApi.getAll(),
     enabled,
+  });
+}
+
+export function useMemoriesQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.memories,
+    queryFn: () => memoriesApi.list({ limit: 100 }),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useActionsQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.actions,
+    queryFn: () => actionsApi.list({ limit: 100, offset: 0 }),
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useRecentConversationsQuery(enabled = true, limit = INTERACTION_PANEL_RECENT_LIMIT) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: queryKeys.conversationsRecent(limit),
+    queryFn: async (): Promise<Conversation[]> => {
+      const rows = await conversationsApi.getRecent(limit, 0);
+      for (const c of rows) {
+        queryClient.setQueryData<Conversation>(queryKeys.conversationById(c.id), c);
+      }
+      return rows;
+    },
+    enabled,
+    staleTime: CONVERSATION_STALE_MS,
+  });
+}
+
+/**
+ * Initial interaction load scoped to recent conversation IDs (plus orphans), for the interaction panel.
+ */
+export function useInteractionsBootstrapQuery(
+  conversationIds: string[],
+  enabled: boolean,
+  limit?: number
+) {
+  const idsKey = [...conversationIds].sort().join('\u001f');
+  return useQuery({
+    queryKey: queryKeys.interactionsBootstrap(idsKey),
+    queryFn: () => interactionsApi.getBootstrapForConversations(conversationIds, { limit }),
+    enabled,
+    staleTime: INTERACTIONS_BOOTSTRAP_STALE_MS,
+    placeholderData: keepPreviousData,
   });
 }
 
