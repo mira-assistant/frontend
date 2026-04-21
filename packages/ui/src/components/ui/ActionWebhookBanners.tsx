@@ -11,11 +11,25 @@ function titleCaseActionType(actionType: string): string {
     .join(' ');
 }
 
-const AUTO_DISMISS_MS = 14_000;
+const ACTION_BANNER_MS = 10_000;
+
+function bodyFromActionDetails(details: string | null): string | undefined {
+  const t = details?.trim();
+  if (!t) return undefined;
+  try {
+    const o = JSON.parse(t) as { canonical_text?: unknown };
+    if (typeof o.canonical_text === 'string' && o.canonical_text.trim()) {
+      return o.canonical_text.trim();
+    }
+  } catch {
+    /* not JSON */
+  }
+  return t;
+}
 
 /**
- * Subscribes to realtime "action" events and surfaces them as the assistant notification banner.
- * Renders no UI — banner is shown via NotificationBannerSlot in AssistantLayout.
+ * Subscribes to realtime "action" events and enqueues assistant notification banners (FIFO).
+ * Renders no UI — banners are shown via NotificationBannerSlot in AssistantLayout.
  */
 export default function ActionWebhookBanners() {
   const { showBanner } = useNotifications();
@@ -31,8 +45,13 @@ export default function ActionWebhookBanners() {
       }
       const data = raw as ActionWebhookPayload;
       const title = `${titleCaseActionType(data.action_type)} · ${data.status}`;
-      const body = data.details?.trim() || undefined;
-      showBanner({ title, body, durationMs: AUTO_DISMISS_MS });
+      const body = bodyFromActionDetails(data.details);
+      showBanner({
+        id: data.id,
+        title,
+        body,
+        durationMs: ACTION_BANNER_MS,
+      });
     },
     [showBanner]
   );

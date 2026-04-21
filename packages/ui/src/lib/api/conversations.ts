@@ -5,12 +5,21 @@ import { Conversation } from '@dadei/ui/types/models.types';
 
 export const conversationsApi = {
   /**
-   * Get all conversations for network
-   * GET /api/v1/conversations
+   * List recent conversations for the network (newest first).
+   * GET /api/v1/conversations?limit=&offset=
+   */
+  async getRecent(limit = 10, offset = 0): Promise<Conversation[]> {
+    const { data } = await api.get<Conversation[]>(ENDPOINTS.CONVERSATIONS, {
+      params: { limit, offset },
+    });
+    return data;
+  },
+
+  /**
+   * @deprecated Prefer {@link getRecent}; kept for callers that want a larger page.
    */
   async getAll(): Promise<Conversation[]> {
-    const { data } = await api.get<Conversation[]>(ENDPOINTS.CONVERSATIONS);
-    return data;
+    return conversationsApi.getRecent(100, 0);
   },
 
   /**

@@ -3,11 +3,14 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
 import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
+import ActionsRealtimeSync from '@dadei/ui/components/ui/ActionsRealtimeSync';
+import EpisodicMemoryRealtimeSync from '@dadei/ui/components/ui/EpisodicMemoryRealtimeSync';
 import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/interaction-panel';
 import AssistantSettingsModal from '@dadei/ui/components/modals/SettingsModal';
 import { DesktopTitleBarStrip } from '@dadei/ui/components/DesktopWindowChrome';
+import { useMemoriesQuery, useActionsQuery } from '@dadei/ui/lib/queryHooks';
 import { isElectronDesktop } from '@dadei/ui/lib/electronWindowChrome';
 import { ASSISTANT_PATH } from '@dadei/ui/lib/assistantPaths';
 import { Mic } from 'lucide-react';
@@ -20,6 +23,10 @@ export default function AssistantLayout() {
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
+
+  const prefetchData = isAuthenticated && !isLoading;
+  useMemoriesQuery(prefetchData);
+  useActionsQuery(prefetchData);
 
   if (isLoading) {
     return (
@@ -74,6 +81,8 @@ export default function AssistantLayout() {
       />
 
       <ActionWebhookBanners />
+      <EpisodicMemoryRealtimeSync />
+      <ActionsRealtimeSync />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}

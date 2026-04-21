@@ -8,6 +8,24 @@ interface GetInteractionsParams {
   offset?: number;
 }
 
+function interactionsBootstrapParamsSerializer(params: Record<string, unknown>): string {
+  const sp = new URLSearchParams();
+  const limit = params.limit != null ? String(params.limit) : '500';
+  const offset = params.offset != null ? String(params.offset) : '0';
+  sp.set('limit', limit);
+  sp.set('offset', offset);
+  if (params.orphans_only === true || params.orphans_only === 'true') {
+    sp.set('orphans_only', 'true');
+  }
+  const ids = params.conversation_ids as string[] | undefined;
+  if (ids?.length) {
+    for (const id of ids) {
+      sp.append('conversation_ids', id);
+    }
+  }
+  return sp.toString();
+}
+
 export interface RegisterInteractionTiming {
   chunkStartMs?: number;
   chunkEndMs?: number;
@@ -24,6 +42,27 @@ export const interactionsApi = {
         limit: params?.limit || 50,
         offset: params?.offset || 0,
       },
+    });
+    return data;
+  },
+
+  /**
+   * Interactions for bootstrap: given conversation rows plus orphan interactions.
+   * GET /api/v1/interactions?conversation_ids=...&conversation_ids=... (repeated) or orphans_only=true
+   */
+  async getBootstrapForConversations(
+    conversationIds: string[],
+    params?: { limit?: number }
+  ): Promise<Interaction[]> {
+    const limit = params?.limit ?? 500;
+    const requestParams: Record<string, unknown> =
+      conversationIds.length > 0
+        ? { limit, offset: 0, conversation_ids: conversationIds }
+        : { limit, offset: 0, orphans_only: true };
+
+    const { data } = await api.get<Interaction[]>(ENDPOINTS.INTERACTIONS, {
+      params: requestParams,
+      paramsSerializer: interactionsBootstrapParamsSerializer,
     });
     return data;
   },

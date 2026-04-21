@@ -91,6 +91,11 @@ export default function ConversationCard({
   getPersonDisplay: (personId: string) => { label: string; index: number };
   getPersonColor: (personIndex: number) => { background: string; border: string; text: string };
 }) {
+  const conversationIdForActions =
+    group.conversation?.id?.trim() ||
+    group.interactions.find(i => i.conversation_id?.trim())?.conversation_id?.trim() ||
+    '';
+
   return (
     <div
       role="button"
@@ -142,17 +147,17 @@ export default function ConversationCard({
           </div>
         </div>
 
-        {group.conversation ? (
+        {conversationIdForActions ? (
           <SplitDeleteToolbar
             group="conversation"
-            armed={armedConversationDeleteId === group.conversation.id}
+            armed={armedConversationDeleteId === conversationIdForActions}
             onArm={() => {
               setArmedInteractionDeleteId(null);
-              setArmedConversationDeleteId(group.conversation!.id);
+              setArmedConversationDeleteId(conversationIdForActions);
             }}
             onDisarm={() => setArmedConversationDeleteId(null)}
             onConfirm={() => {
-              void handleDeleteConversation(group.conversation!.id);
+              void handleDeleteConversation(conversationIdForActions);
             }}
             idleTitle="Delete conversation"
             idleAriaLabel="Delete conversation"

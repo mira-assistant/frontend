@@ -138,6 +138,8 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
       stopRealtimeClient();
       setRegistrationConflict(false);
       queryClient.removeQueries({ queryKey: queryKeys.serviceClients });
+      queryClient.removeQueries({ queryKey: queryKeys.memories });
+      queryClient.removeQueries({ queryKey: queryKeys.actions });
     }
   }, [isAuthenticated, queryClient]);
 

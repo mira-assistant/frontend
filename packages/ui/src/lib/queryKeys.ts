@@ -1,9 +1,15 @@
 export const queryKeys = {
   persons: ['persons'] as const,
   personById: (personId: string) => ['persons', personId] as const,
+  memories: ['memories'] as const,
+  actions: ['actions'] as const,
   interactions: ['interactions'] as const,
   /** Prefix for `conversationById`; use with `removeQueries` / `invalidateQueries` to affect all cached conversations. */
   conversations: ['conversations'] as const,
+  conversationsRecent: (limit: number) => [...queryKeys.conversations, 'recent', limit] as const,
+  /** Bootstrap interactions scoped to conversation IDs (sorted, joined for stable key). */
+  interactionsBootstrap: (conversationIdsKey: string) =>
+    [...queryKeys.interactions, 'bootstrap', conversationIdsKey] as const,
   conversationById: (conversationId: string) =>
     [...queryKeys.conversations, conversationId] as readonly ['conversations', string],
   serviceClients: ['service', 'clients'] as const,
