@@ -371,7 +371,7 @@ export default function LandingPage() {
                 open assistant
               </Link>
               <a
-                href="https://github.com/dadei-app/frontend/releases"
+                href="https://github.com/dadei-app/frontend/releases/latest"
                 target="_blank"
                 rel="noopener noreferrer"
                   className="rounded-xl border border-white/20 bg-white/8 px-3 py-2 text-xs text-zinc-100 font-secondary backdrop-blur-xl hover:bg-white/14 sm:text-sm"
@@ -544,7 +544,7 @@ export default function LandingPage() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-zinc-300 font-secondary">
             <a
-              href="https://github.com/dadei-app/frontend/releases"
+              href="https://github.com/dadei-app/frontend/releases/latest"
               className="hover:text-zinc-100"
               target="_blank"
               rel="noopener noreferrer"
