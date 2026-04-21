@@ -7,6 +7,7 @@ import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNa
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearAssistantSessionCaches } from '@dadei/ui/lib/queryHooks';
 import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface ServiceContextType {
@@ -137,9 +138,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated) {
       stopRealtimeClient();
       setRegistrationConflict(false);
-      queryClient.removeQueries({ queryKey: queryKeys.serviceClients });
-      queryClient.removeQueries({ queryKey: queryKeys.memories });
-      queryClient.removeQueries({ queryKey: queryKeys.actions });
+      clearAssistantSessionCaches(queryClient);
     }
   }, [isAuthenticated, queryClient]);
 

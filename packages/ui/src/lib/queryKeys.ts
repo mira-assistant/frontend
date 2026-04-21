@@ -1,8 +1,13 @@
 export const queryKeys = {
   persons: ['persons'] as const,
   personById: (personId: string) => ['persons', personId] as const,
+  /** Prefix for memory list queries; use with `removeQueries` / `invalidateQueries`. */
   memories: ['memories'] as const,
+  memoriesList: (limit: number) => [...queryKeys.memories, 'list', limit] as const,
+  /** Prefix for action list queries. */
   actions: ['actions'] as const,
+  actionsList: (limit: number, offset: number) =>
+    [...queryKeys.actions, 'list', limit, offset] as const,
   interactions: ['interactions'] as const,
   /** Prefix for `conversationById`; use with `removeQueries` / `invalidateQueries` to affect all cached conversations. */
   conversations: ['conversations'] as const,

@@ -35,6 +35,23 @@ export function removeAllConversationQueries(queryClient: QueryClient) {
   queryClient.removeQueries({ queryKey: queryKeys.conversations });
 }
 
+/** Default list sizes for assistant shell + settings (matches interaction panel style scoped keys). */
+export const ASSISTANT_MEMORIES_LIST_LIMIT = 100;
+export const ASSISTANT_ACTIONS_LIST_LIMIT = 100;
+
+/**
+ * Drop cached network-scoped data (conversations, interactions, memory, actions, persons, service).
+ * Call on logout or when auth is cleared so a new session never reads stale rows.
+ */
+export function clearAssistantSessionCaches(queryClient: QueryClient) {
+  queryClient.removeQueries({ queryKey: queryKeys.serviceClients });
+  queryClient.removeQueries({ queryKey: queryKeys.memories });
+  queryClient.removeQueries({ queryKey: queryKeys.actions });
+  removeAllConversationQueries(queryClient);
+  queryClient.removeQueries({ queryKey: queryKeys.interactions });
+  queryClient.removeQueries({ queryKey: queryKeys.persons });
+}
+
 export function usePersonsQuery(enabled = true) {
   return useQuery({
     queryKey: queryKeys.persons,
@@ -109,21 +126,43 @@ export function useInteractionsQuery(enabled = true) {
   });
 }
 
-export function useMemoriesQuery(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.memories,
-    queryFn: () => memoriesApi.list({ limit: 100 }),
-    enabled,
+export function memoriesListQueryOptions(limit = ASSISTANT_MEMORIES_LIST_LIMIT) {
+  return {
+    queryKey: queryKeys.memoriesList(limit),
+    queryFn: () => memoriesApi.list({ limit }),
     staleTime: 30_000,
+    /** Lists are warmed on the assistant shell and updated via realtime; avoid refetch when Settings opens. */
+    refetchOnMount: false,
+  };
+}
+
+export function actionsListQueryOptions(
+  limit = ASSISTANT_ACTIONS_LIST_LIMIT,
+  offset = 0
+) {
+  return {
+    queryKey: queryKeys.actionsList(limit, offset),
+    queryFn: () => actionsApi.list({ limit, offset }),
+    staleTime: 30_000,
+    refetchOnMount: false,
+  };
+}
+
+export function useMemoriesQuery(enabled = true, limit = ASSISTANT_MEMORIES_LIST_LIMIT) {
+  return useQuery({
+    ...memoriesListQueryOptions(limit),
+    enabled,
   });
 }
 
-export function useActionsQuery(enabled = true) {
+export function useActionsQuery(
+  enabled = true,
+  limit = ASSISTANT_ACTIONS_LIST_LIMIT,
+  offset = 0
+) {
   return useQuery({
-    queryKey: queryKeys.actions,
-    queryFn: () => actionsApi.list({ limit: 100, offset: 0 }),
+    ...actionsListQueryOptions(limit, offset),
     enabled,
-    staleTime: 30_000,
   });
 }
 

@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Brain, ListTodo, LogOut, Trash2, X } from 'lucide-react';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { useAuthMeQuery, useMemoriesQuery, useActionsQuery } from '@dadei/ui/lib/queryHooks';
@@ -40,10 +41,11 @@ function actionSummary(details: string | null): string | undefined {
 
 export default function AssistantSettingsModal({ open, onOpenChange }: AssistantSettingsModalProps) {
   const { user, refreshUser, logout } = useAuth();
+  const { isConnected } = useService();
   const { showToast } = useNotifications();
   const authMeQuery = useAuthMeQuery(open);
-  const memoriesQuery = useMemoriesQuery(open);
-  const actionsQuery = useActionsQuery(open);
+  const memoriesQuery = useMemoriesQuery(isConnected);
+  const actionsQuery = useActionsQuery(isConnected);
   const [deletePhrase, setDeletePhrase] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
@@ -161,12 +163,14 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
                   </h3>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-none pr-1">
-                  {memoriesQuery.isLoading ? (
+                  {!isConnected ? (
+                    <p className="text-sm text-zinc-500 font-secondary">
+                      Memories load after this device registers as a client (same as the interaction feed).
+                    </p>
+                  ) : memoriesQuery.isLoading ? (
                     <p className="text-sm text-zinc-500 font-secondary">Loading memories…</p>
                   ) : memoriesQuery.isError ? (
-                    <p className="text-sm text-rose-300/90 font-secondary">
-                      {fetchErr(memoriesQuery.error)} — if you are not on API v2, memories are unavailable.
-                    </p>
+                    <p className="text-sm text-rose-300/90 font-secondary">{fetchErr(memoriesQuery.error)}</p>
                   ) : memoryRows.length === 0 ? (
                     <p className="text-sm text-zinc-500 font-secondary">
                       No episodic memories yet. They appear after conversations are processed.
@@ -197,12 +201,14 @@ export default function AssistantSettingsModal({ open, onOpenChange }: Assistant
                   </h3>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-none pr-1">
-                  {actionsQuery.isLoading ? (
+                  {!isConnected ? (
+                    <p className="text-sm text-zinc-500 font-secondary">
+                      Actions load after this device registers as a client (same as the interaction feed).
+                    </p>
+                  ) : actionsQuery.isLoading ? (
                     <p className="text-sm text-zinc-500 font-secondary">Loading actions…</p>
                   ) : actionsQuery.isError ? (
-                    <p className="text-sm text-rose-300/90 font-secondary">
-                      {fetchErr(actionsQuery.error)} — if you are not on API v2, actions list is unavailable.
-                    </p>
+                    <p className="text-sm text-rose-300/90 font-secondary">{fetchErr(actionsQuery.error)}</p>
                   ) : actionRows.length === 0 ? (
                     <p className="text-sm text-zinc-500 font-secondary">No actions yet.</p>
                   ) : (

@@ -1,10 +1,10 @@
 import { useLayoutEffect, useState, type CSSProperties } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
 import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
-import ActionsRealtimeSync from '@dadei/ui/components/ui/ActionsRealtimeSync';
-import EpisodicMemoryRealtimeSync from '@dadei/ui/components/ui/EpisodicMemoryRealtimeSync';
+import NetworkMemoryRealtimeSync from '@dadei/ui/components/ui/NetworkMemoryRealtimeSync';
 import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
 import InteractionPanel from '@dadei/ui/components/interaction-panel';
@@ -20,13 +20,15 @@ import { Mic } from 'lucide-react';
  */
 export default function AssistantLayout() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { isConnected } = useService();
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
 
-  const prefetchData = isAuthenticated && !isLoading;
-  useMemoriesQuery(prefetchData);
-  useActionsQuery(prefetchData);
+  /** Same gate as interaction panel: list + realtime only after `/service/clients` registration. */
+  const sessionDataEnabled = isAuthenticated && !isLoading && isConnected;
+  useMemoriesQuery(sessionDataEnabled);
+  useActionsQuery(sessionDataEnabled);
 
   /** Portaled overlays (e.g. PeoplePanel) read chrome offsets from `html`, not the assistant shell. */
   useLayoutEffect(() => {
@@ -94,8 +96,7 @@ export default function AssistantLayout() {
       />
 
       <ActionWebhookBanners />
-      <EpisodicMemoryRealtimeSync />
-      <ActionsRealtimeSync />
+      <NetworkMemoryRealtimeSync />
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         {isElectronDesktop() ? <DesktopTitleBarStrip /> : null}

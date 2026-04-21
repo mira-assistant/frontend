@@ -5,6 +5,7 @@ import { authApi } from '@dadei/ui/lib/api/auth';
 import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
 import { AuthTokens, LoginCredentials, RegisterData, UserMe } from '@dadei/ui/types/auth.types';
 import { useQueryClient } from '@tanstack/react-query';
+import { clearAssistantSessionCaches } from '@dadei/ui/lib/queryHooks';
 import { queryKeys } from '@dadei/ui/lib/queryKeys';
 
 interface AuthContextType {
@@ -132,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             applyTokens(null);
             setIsAuthenticated(false);
             setUser(null);
+            clearAssistantSessionCaches(queryClient);
             queryClient.removeQueries({ queryKey: queryKeys.authMe });
 
             return Promise.reject(_refreshError);
@@ -177,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             applyTokens(null);
             setIsAuthenticated(false);
             setUser(null);
+            clearAssistantSessionCaches(queryClient);
             queryClient.removeQueries({ queryKey: queryKeys.authMe });
           }
         } else {
@@ -247,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       applyTokens(null);
       setIsAuthenticated(false);
       setUser(null);
+      clearAssistantSessionCaches(queryClient);
       queryClient.removeQueries({ queryKey: queryKeys.authMe });
 
       console.log('Logged out successfully');
