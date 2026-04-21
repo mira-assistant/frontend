@@ -44,66 +44,49 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
       <motion.button
         onClick={handleClick}
         disabled={micBlocked}
-        whileHover={!micBlocked && !isServiceEnabled ? {
-          scale: 1.05,
-          rotate: [0, -2, 2, -2, 2, 0],
-          transition: { duration: 0 }
-        } : {}}
-        whileTap={!micBlocked ? {
-          scale: 0.95,
-          rotate: isServiceEnabled ? 0 : [0, -5, 5, -5, 5, 0]
-        } : {}}
+        whileHover={
+          !micBlocked && !isServiceEnabled
+            ? { scale: 1.05, transition: { duration: 0.15 } }
+            : {}
+        }
+        whileTap={!micBlocked ? { scale: 0.95, transition: { duration: 0.1 } } : {}}
         className={cn(
-          'relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] border-white/15 transition-all duration-300',
+          'relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] border-white/15 transition-[background-image,box-shadow,opacity,border-color] duration-300',
           'focus:outline-none focus:ring-4 focus:ring-emerald-500/25',
           micBlocked
             ? 'cursor-not-allowed bg-zinc-700 opacity-60'
             : isServiceEnabled
-              ? 'cursor-pointer bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_10px_30px_rgba(225,29,72,0.45),0_0_40px_rgba(225,29,72,0.25)]'
-              : 'cursor-pointer bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_8px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_40px_rgba(16,185,129,0.45)]'
+              ? 'cursor-pointer bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(225,29,72,0.5),0_0_64px_rgba(225,29,72,0.22)]'
+              : 'cursor-pointer bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_0_28px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]'
         )}
       >
         {/* Red Ripple Waves - when service enabled */}
         {isServiceEnabled && !micBlocked && (
           <>
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full border-2 border-[rgba(255,68,68,0.6)] rounded-full bg-transparent pointer-events-none"
-              animate={{
-                scale: [1.05, 2],
-                opacity: [0, 0.6, 0]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeOut"
-              }}
-            />
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full border-2 border-[rgba(255,68,68,0.6)] rounded-full bg-transparent pointer-events-none"
-              animate={{
-                scale: [1.05, 2],
-                opacity: [0, 0.6, 0]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.4
-              }}
-            />
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full border-2 border-[rgba(255,68,68,0.6)] rounded-full bg-transparent pointer-events-none"
-              animate={{
-                scale: [1.05, 2],
-                opacity: [0, 0.6, 0]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.8
-              }}
-            />
+            {[
+              { delay: 0 },
+              { delay: 0.4 },
+              { delay: 0.8 },
+            ].map(({ delay }) => (
+              <div
+                key={delay}
+                className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              >
+                <motion.div
+                  className="h-full w-full rounded-full border-2 border-[rgba(255,68,68,0.6)] bg-transparent"
+                  animate={{
+                    scale: [1.05, 2],
+                    opacity: [0, 0.6, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: 'easeOut',
+                    delay,
+                  }}
+                />
+              </div>
+            ))}
           </>
         )}
 
@@ -126,7 +109,7 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
         {/* Microphone Icon - static when enabled */}
         <div className="relative z-10 text-white flex items-center justify-center">
           <svg
-            className="w-16 h-16 drop-shadow-[0_2px_4px_rgba(0,0,0,0.2)]"
+            className="h-16 w-16 drop-shadow-[0_0_3px_rgba(0,0,0,0.35)]"
             viewBox="0 0 24 24"
             fill="currentColor"
           >

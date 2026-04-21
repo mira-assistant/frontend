@@ -24,7 +24,7 @@ function useMaximizedState() {
 }
 
 /** Window controls for frameless desktop Electron (all platforms). */
-export function DesktopWindowControls({ className }: { className?: string }) {
+export function DesktopWindowControls() {
   const { api, isMaximized, setIsMaximized } = useMaximizedState();
 
   const minimize = useCallback(() => {
@@ -49,7 +49,7 @@ export function DesktopWindowControls({ className }: { className?: string }) {
 
   return (
     <div
-      className={cn('flex self-stretch border-l border-white/8', className)}
+      className="flex self-stretch border-l border-white/8"
       style={{ WebkitAppRegion: 'no-drag' } as CSSProperties}
     >
       <button type="button" onClick={minimize} className={btn} title="Minimize" aria-label="Minimize">
@@ -75,17 +75,12 @@ export function DesktopWindowControls({ className }: { className?: string }) {
 }
 
 /** Slim top bar: drag + branding; custom window controls only on Windows / Linux. */
-export function DesktopTitleBarStrip({ className }: { className?: string }) {
+export function DesktopTitleBarStrip() {
   if (!isElectronDesktop()) return null;
 
   return (
     <div
-      className={cn(
-        'relative z-50 flex w-full shrink-0 border-b border-white/8 bg-zinc-950/90 backdrop-blur-md',
-        // Shorter strip on macOS so system traffic lights sit nearer the vertical center of the bar.
-        isElectronMac() ? 'h-8 items-center' : 'h-11 items-stretch',
-        className,
-      )}
+      className="relative z-50 flex w-full shrink-0 border-b border-white/8 bg-zinc-950/90 backdrop-blur-md h-8 items-center"
       style={{ WebkitAppRegion: 'drag' } as CSSProperties}
     >
       <span
