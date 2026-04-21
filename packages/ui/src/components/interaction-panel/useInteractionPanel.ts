@@ -128,6 +128,28 @@ export function useInteractionPanel() {
     [personsQuery.data]
   );
 
+  /**
+   * Interactions (bootstrap + realtime) can reference a person created after the last
+   * GET /persons. Without a refetch, getPersonDisplay falls through to "Loading..." forever.
+   */
+  useEffect(() => {
+    if (!isConnected || !personsQuery.isSuccess) return;
+    const known = new Set((personsQuery.data ?? []).map(p => p.id));
+    const hasUnknownPerson = interactions.some(
+      i => Boolean(i.person_id?.trim()) && !known.has(i.person_id.trim())
+    );
+    if (hasUnknownPerson && !personsQuery.isFetching) {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.persons });
+    }
+  }, [
+    isConnected,
+    interactions,
+    personsQuery.data,
+    personsQuery.isFetching,
+    personsQuery.isSuccess,
+    queryClient,
+  ]);
+
   const displayGroups: ConversationGroupView[] = useMemo(() => {
     const activeKey = activeConversationKey(conversationGroups);
     return conversationGroups.map(g => {
