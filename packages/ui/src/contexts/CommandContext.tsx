@@ -11,19 +11,13 @@ import { useAuth } from '@dadei/ui/contexts/AuthContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { streamCommand, type CommandSSEEvent } from '@dadei/ui/lib/api/command';
 
-export type CommandMode =
-  | 'passive'
-  | 'listening_for_command'
-  | 'capturing'
-  | 'streaming'
-  | 'done';
+export type CommandMode = 'passive' | 'capturing' | 'streaming' | 'done';
 
 interface CommandContextValue {
   mode: CommandMode;
   transcript: string;
   responseTokens: string[];
   activeToolCall: string | undefined;
-  triggerCommandCapture: () => void;
   submitCommandAudio: (wav: ArrayBuffer) => void;
   dismiss: () => void;
 }
@@ -54,15 +48,7 @@ export function CommandProvider({ children }: { children: ReactNode }) {
   const [responseTokens, setResponseTokens] = useState<string[]>([]);
   const [activeToolCall, setActiveToolCall] = useState<string | undefined>(undefined);
 
-  const safetyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearSafetyTimer = useCallback(() => {
-    if (safetyTimerRef.current != null) {
-      clearTimeout(safetyTimerRef.current);
-      safetyTimerRef.current = null;
-    }
-  }, []);
 
   const clearDismissTimer = useCallback(() => {
     if (dismissTimerRef.current != null) {
@@ -72,58 +58,49 @@ export function CommandProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismiss = useCallback(() => {
-    clearSafetyTimer();
     clearDismissTimer();
     setMode('passive');
     setTranscript('');
     setResponseTokens([]);
     setActiveToolCall(undefined);
-  }, [clearDismissTimer, clearSafetyTimer]);
+  }, [clearDismissTimer]);
 
-  const triggerCommandCapture = useCallback(() => {
-    clearSafetyTimer();
-    clearDismissTimer();
-    setMode('listening_for_command');
-    safetyTimerRef.current = setTimeout(() => {
-      setMode('passive');
-      safetyTimerRef.current = null;
-    }, 10_000);
-  }, [clearDismissTimer, clearSafetyTimer]);
-
-  const handleEvent = useCallback((ev: CommandSSEEvent) => {
-    switch (ev.type) {
-      case 'transcript':
-        setTranscript(ev.text);
-        setMode('streaming');
-        break;
-      case 'token':
-        setResponseTokens((prev) => [...prev, ev.text]);
-        break;
-      case 'tool_call':
-        setActiveToolCall(toolLabel(ev.tool));
-        break;
-      case 'tool_result':
-        setActiveToolCall(undefined);
-        break;
-      case 'error':
-        setTranscript(ev.message);
-        setMode('done');
-        break;
-      case 'done':
-        setMode('done');
-        clearDismissTimer();
-        dismissTimerRef.current = setTimeout(() => {
-          dismiss();
-        }, 5000);
-        break;
-      default:
-        break;
-    }
-  }, [clearDismissTimer, dismiss]);
+  const handleEvent = useCallback(
+    (ev: CommandSSEEvent) => {
+      switch (ev.type) {
+        case 'transcript':
+          setTranscript(ev.text);
+          setMode('streaming');
+          break;
+        case 'token':
+          setResponseTokens((prev) => [...prev, ev.text]);
+          break;
+        case 'tool_call':
+          setActiveToolCall(toolLabel(ev.tool));
+          break;
+        case 'tool_result':
+          setActiveToolCall(undefined);
+          break;
+        case 'error':
+          setTranscript(ev.message);
+          setMode('done');
+          break;
+        case 'done':
+          setMode('done');
+          clearDismissTimer();
+          dismissTimerRef.current = setTimeout(() => {
+            dismiss();
+          }, 5000);
+          break;
+        default:
+          break;
+      }
+    },
+    [clearDismissTimer, dismiss],
+  );
 
   const submitCommandAudio = useCallback(
     (wav: ArrayBuffer) => {
-      clearSafetyTimer();
       setMode('capturing');
       setTranscript('');
       setResponseTokens([]);
@@ -154,15 +131,14 @@ export function CommandProvider({ children }: { children: ReactNode }) {
         }
       })();
     },
-    [clearDismissTimer, clearSafetyTimer, clientName, dismiss, getAccessToken, handleEvent, isConnected],
+    [clearDismissTimer, clientName, dismiss, getAccessToken, handleEvent, isConnected],
   );
 
   useEffect(
     () => () => {
-      clearSafetyTimer();
       clearDismissTimer();
     },
-    [clearDismissTimer, clearSafetyTimer],
+    [clearDismissTimer],
   );
 
   const value: CommandContextValue = {
@@ -170,7 +146,6 @@ export function CommandProvider({ children }: { children: ReactNode }) {
     transcript,
     responseTokens,
     activeToolCall,
-    triggerCommandCapture,
     submitCommandAudio,
     dismiss,
   };

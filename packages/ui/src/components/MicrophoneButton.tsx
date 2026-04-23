@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useCommand } from '@dadei/ui/contexts/CommandContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { cn } from '@dadei/ui/lib/cn';
 
@@ -15,10 +14,8 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
     isTogglingService,
     registrationConflict,
   } = useService();
-  const { mode: commandMode } = useCommand();
 
   const micBlocked = isTogglingService || registrationConflict;
-  const commandListen = commandMode === 'listening_for_command';
 
   // Spacebar activation
   // Spacebar activation (disabled when panel open)
@@ -58,9 +55,7 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
           micBlocked
             ? 'cursor-not-allowed border-white/15 bg-zinc-700 opacity-60'
             : isServiceEnabled
-              ? commandListen
-                ? 'cursor-pointer border-amber-400/40 bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(251,191,36,0.3)]'
-                : 'cursor-pointer border-white/15 bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(225,29,72,0.5),0_0_64px_rgba(225,29,72,0.22)]'
+              ? 'cursor-pointer border-white/15 bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(225,29,72,0.5),0_0_64px_rgba(225,29,72,0.22)]'
               : 'cursor-pointer border-white/15 bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_0_28px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]'
         )}
       >

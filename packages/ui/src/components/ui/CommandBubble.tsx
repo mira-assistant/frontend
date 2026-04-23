@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 
 export interface CommandBubbleProps {
-  mode: 'listening_for_command' | 'capturing' | 'streaming' | 'done';
+  mode: 'capturing' | 'streaming' | 'done';
   transcript: string;
   responseTokens: string[];
   activeToolCall?: string;
@@ -43,13 +43,6 @@ export default function CommandBubble({
         </button>
 
         <div className="relative pr-8">
-          {mode === 'listening_for_command' && (
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              <span className="font-secondary text-sm text-zinc-400">Listening...</span>
-            </div>
-          )}
-
           {mode === 'capturing' && (
             <div className="flex items-center gap-2">
               <span

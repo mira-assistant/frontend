@@ -21,6 +21,9 @@ import { ORPHAN_KEY, PERSON_COLOR_SHADES } from './constants';
 import { activeConversationKey, groupKey, parseInteractionDate } from './conversationUtils';
 import type { ConversationGroupState, ConversationGroupView } from './types';
 
+/** Stable fallback so `useEffect` / `useMemo` deps do not churn when the query has no `data` yet. */
+const EMPTY_INTERACTIONS: Interaction[] = [];
+
 function buildConversationGroups(
   interactions: Interaction[],
   conversationById: Map<string, Conversation>,
@@ -116,7 +119,7 @@ export function useInteractionPanel() {
   );
 
   const personsQuery = usePersonsQuery(isConnected);
-  const interactions = interactionsBootstrapQuery.data ?? [];
+  const interactions = interactionsBootstrapQuery.data ?? EMPTY_INTERACTIONS;
 
   const conversationIds = useMemo(() => {
     const ids = new Set<string>();

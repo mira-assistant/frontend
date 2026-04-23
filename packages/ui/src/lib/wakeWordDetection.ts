@@ -43,3 +43,35 @@ export function transcriptLikelyContainsWakeWord(text: string): boolean {
 
   return false;
 }
+
+/**
+ * True when the transcript begins with a Dadei-like wake token (command-style utterance).
+ * Mid-sentence "… and Dadei …" is intentionally not treated as a command.
+ */
+export function transcriptStartsWithWakeCommand(text: string): boolean {
+  const raw = text.trim();
+  if (!raw) return false;
+
+  const lower = raw.toLowerCase().normalize('NFKD');
+  const lead = lower.replace(/^[^\p{L}\p{N}]+/u, '');
+  if (!lead) return false;
+
+  const firstWord = lead.match(/^[\p{L}\p{N}'-]+/u)?.[0]?.toLowerCase() ?? '';
+  if (firstWord === 'daddy') return false;
+
+  const startsShape =
+    /^dadei\b/i.test(lead) ||
+    /^dadey\b/i.test(lead) ||
+    /^dadee\b/i.test(lead) ||
+    /^daday\b/i.test(lead) ||
+    /^dah[-\s]?dee\b/i.test(lead) ||
+    /^da[-\s]?dee\b/i.test(lead) ||
+    /^da\s+d[eiy]\b/i.test(lead) ||
+    /^da[-\s]?dei\b/i.test(lead) ||
+    /^dade\s*[-]?\s*i\b/i.test(lead);
+
+  if (startsShape) return true;
+
+  const collapsedLead = lead.replace(/[^a-z]/g, '');
+  return /^(dadei|dadey|dadee|daday|dahdee|dadai|dadeh)/.test(collapsedLead);
+}

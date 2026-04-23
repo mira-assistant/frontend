@@ -1,11 +1,8 @@
 import './env';
-import { app, BrowserWindow, ipcMain, Menu, type WebContents } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, type WebContents } from 'electron';
 import path from 'path';
-import {
-  assertBackendMajorCompatible,
-  configureSilentAutoUpdates,
-  isUpdateInstallInProgress,
-} from './updater';
+import { closeUpdaterSplashWindow, createUpdaterSplashWindow } from './updater-window';
+import { getBackendVersionGate, isUpdateInstallInProgress, runPackagedStartupFlow } from './updater';
 import { api } from '../shared/api/client';
 import { ENDPOINTS } from '../shared/api/constants';
 import { TokenStorage } from './auth/token-storage';
@@ -192,20 +189,40 @@ ipcMain.handle('window:is-maximized', (event) => {
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
 
-  const backendOk = await assertBackendMajorCompatible();
-  if (!backendOk) {
-    app.quit();
-    return;
-  }
-
-  configureSilentAutoUpdates();
-  createWindow();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
+
+  if (!app.isPackaged) {
+    const gate = await getBackendVersionGate();
+    if (gate.mandatoryMismatch) {
+      dialog.showErrorBox(
+        'Update required',
+        `This build (v${app.getVersion()}) is not compatible with the server (${gate.serverVersion ?? 'unknown'}). Align the desktop version with the server major version.`,
+      );
+      app.quit();
+      return;
+    }
+    createWindow();
+    return;
+  }
+
+  await createUpdaterSplashWindow();
+  const outcome = await runPackagedStartupFlow();
+
+  if (outcome === 'launch_main') {
+    closeUpdaterSplashWindow();
+    createWindow();
+    return;
+  }
+
+  if (outcome === 'quit_for_install') {
+    return;
+  }
+
+  // quit_manual: splash stays open with Open releases / Quit until the user exits.
 });
 
 app.on('window-all-closed', () => {
