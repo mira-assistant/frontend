@@ -136,6 +136,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         const pending = transcribePendingRef.current.get(id);
         if (pending) {
           transcribePendingRef.current.delete(id);
+          console.warn('[Wake] Local ASR timed out (120s)', { requestId: id });
           pending.resolve('');
         }
       }, 120_000);
@@ -208,6 +209,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      console.log('[Wake] Segment', {
+        fullQuality,
+        wakeScanOk,
+        workerReady: !!wakeWordWorkerRef.current,
+        samples: audio.length,
+        approxSec: (audio.length / 16000).toFixed(2),
+      });
+
       setIsProcessing(true);
 
       try {
@@ -223,17 +232,28 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
           let localText = '';
           try {
             localText = await transcribeSegment(audio);
-          } catch {
+          } catch (e) {
+            console.warn('[Wake] Local ASR threw:', e);
             localText = '';
           }
-          if (transcriptStartsWithWakeCommand(localText)) {
-            console.log('[VAD] Routed to command (Dadei-prefixed transcript)');
+          const preview =
+            localText.length > 120 ? `${localText.slice(0, 120)}…` : localText || '(empty)';
+          const prefixMatch = transcriptStartsWithWakeCommand(localText);
+          console.log('[Wake] Local ASR done', { chars: localText.length, preview, prefixMatch });
+          if (prefixMatch) {
+            console.log('[Wake] Routed to command (Dadei-prefixed transcript)');
             submitCommandAudioRef.current(wavBuffer);
             return;
           }
+        } else if (fullQuality && !wakeWordWorkerRef.current) {
+          console.warn('[Wake] fullQuality but wake worker not ready — cannot run prefix ASR');
         }
 
         if (!fullQuality) {
+          console.log(
+            '[Wake] Skipping interaction: segment failed fullQuality (min ~0.42s RMS band). wakeScanOk was',
+            wakeScanOk,
+          );
           return;
         }
 

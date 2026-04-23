@@ -7,6 +7,10 @@ import { WAKE_WORD_INITIAL_PROMPT } from '../lib/wakeWordDetection';
 // so the hub loader never falls back to Hugging Face and JSON.parse throws on HTML.
 env.allowLocalModels = false;
 
+// Whisper’s ONNX graph triggers many `[W:onnxruntime: … CleanUnusedInitializers…]` lines
+// (one per unused initializer). Default log level is `warning`, which floods the console.
+env.backends.onnx.logLevel = 'error';
+
 /** Hub still reads `transformers-cache` by local key first; evict stale SPA HTML from older sessions. */
 async function purgePoisonedTransformersCache(): Promise<void> {
   if (typeof caches === 'undefined') return;
@@ -62,9 +66,11 @@ async function runTranscribe(job: Job) {
   await ensurePipeline();
   const { requestId, audio } = job;
   if (!asr) {
+    console.warn('[Wake][worker] No ASR pipeline; empty result', { requestId });
     self.postMessage({ type: 'result', requestId, text: '' });
     return;
   }
+  console.log('[Wake][worker] Transcribe start', { requestId, samples: audio.length });
   try {
     const out = await (asr as unknown as AsrFn)(audio, {
       initial_prompt: WAKE_WORD_INITIAL_PROMPT,
@@ -82,8 +88,11 @@ async function runTranscribe(job: Job) {
     ) {
       text = (out as { text: string }).text;
     }
+    const preview = text.length > 100 ? `${text.slice(0, 100)}…` : text || '(empty)';
+    console.log('[Wake][worker] Transcribe done', { requestId, chars: text.length, preview });
     self.postMessage({ type: 'result', requestId, text });
-  } catch {
+  } catch (err) {
+    console.warn('[Wake][worker] Transcribe error', { requestId, err });
     self.postMessage({ type: 'result', requestId, text: '' });
   }
 }
@@ -109,6 +118,7 @@ self.onmessage = (ev: MessageEvent<MainToWorker>) => {
   while (queue.length >= MAX_QUEUE) {
     const dropped = queue.shift();
     if (dropped) {
+      console.warn('[Wake][worker] Queue full; dropping job', { requestId: dropped.requestId });
       self.postMessage({ type: 'result', requestId: dropped.requestId, text: '' });
     }
   }
