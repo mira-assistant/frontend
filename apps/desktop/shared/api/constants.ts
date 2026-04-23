@@ -42,5 +42,7 @@ export const ENDPOINTS = {
   CONVERSATION_BY_ID: '/conversations/:conversationId',
 
   MEMORIES: '/memories',
-  MEMORY_ACTIONS: '/memories/actions',
+  ACTIONS: '/actions',
+  ACTION_BY_ID: '/actions/:actionId',
+  COMMAND: '/actions/voice',
 } as const;

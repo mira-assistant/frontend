@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@dadei/ui/contexts/AuthContext';
 import { ServiceProvider } from '@dadei/ui/contexts/ServiceContext';
+import { CommandProvider } from '@dadei/ui/contexts/CommandContext';
 import { AudioProvider } from '@dadei/ui/contexts/AudioContext';
 import { NotificationProvider } from '@dadei/ui/contexts/NotificationContext';
 import { AppQueryProvider } from '@dadei/ui/contexts/QueryProvider';
@@ -23,9 +24,11 @@ export function App() {
               path="/assistant"
               element={
                 <ServiceProvider>
-                  <AudioProvider>
-                    <AssistantLayout />
-                  </AudioProvider>
+                  <CommandProvider>
+                    <AudioProvider>
+                      <AssistantLayout />
+                    </AudioProvider>
+                  </CommandProvider>
                 </ServiceProvider>
               }
             />

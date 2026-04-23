@@ -135,15 +135,26 @@ export function useInteractionPanel() {
     })),
   });
 
+  /** `useQueries` returns a new array each render; do not put it in useMemo deps or `conversationById` churns forever. */
+  const conversationIdsKey = conversationIds.join('\u001f');
+  const conversationDataKey = conversationIds
+    .map((id, i) => {
+      const d = conversationQueries[i]?.data;
+      if (!d) return `${id}:`;
+      return `${id}:${d.started_at ?? ''}:${d.is_active ? '1' : '0'}:${d.topic_summary ?? ''}:${d.context_summary ?? ''}`;
+    })
+    .join('\u001f');
+
   const conversationById = useMemo(() => {
     const map = new Map<string, Conversation>();
     conversationIds.forEach((id, index) => {
-      const row = conversationQueries[index];
-      const data = row?.data;
+      const data = conversationQueries[index]?.data;
       if (data) map.set(id, data);
     });
     return map;
-  }, [conversationIds, conversationQueries]);
+    // conversationQueries omitted on purpose — see conversationDataKey above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable keys derived from query *data*, not the queries array identity
+  }, [conversationDataKey, conversationIdsKey]);
 
   const [conversationGroups, setConversationGroups] = useState<ConversationGroupState[]>([]);
   const loading =

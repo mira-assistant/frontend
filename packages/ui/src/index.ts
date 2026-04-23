@@ -4,6 +4,9 @@ export { default as LoginPage } from './pages/LoginPage';
 export { AuthProvider, AuthContext, useAuth } from './contexts/AuthContext';
 export { ServiceProvider, ServiceContext, useService } from './contexts/ServiceContext';
 export { AudioProvider, AudioContext, useAudio } from './contexts/AudioContext';
+export { CommandProvider, useCommand } from './contexts/CommandContext';
+export type { CommandMode } from './contexts/CommandContext';
+export { default as CommandBubble } from './components/ui/CommandBubble';
 export {
   NotificationProvider,
   NotificationBannerSlot,
