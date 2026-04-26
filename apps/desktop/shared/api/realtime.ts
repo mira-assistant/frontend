@@ -3,7 +3,7 @@ const API_PREFIX = isBeta ? '/api/v2' : '/api/v1';
 const apiUrl = process.env.API_URL || 'http://localhost:8000';
 
 /**
- * WebSocket URL for /api/v1/realtime/ws (or v2 when BETA), same host as REST base (API_URL).
+ * WebSocket URL for `{API_PREFIX}/realtime/ws` (same `BETA` / prefix as REST), same host as `API_URL`.
  */
 export function buildRealtimeWebSocketUrl(): string {
   const wsProto = apiUrl.startsWith('https') ? 'wss' : 'ws';

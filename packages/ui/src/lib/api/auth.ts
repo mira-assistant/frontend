@@ -5,7 +5,7 @@ import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 export const authApi = {
   /**
    * Login with email and password
-   * POST /api/v2/auth/login
+   * POST /api/v1/auth/login or /api/v2/... when `BETA=true` (same base as `api` client)
    */
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH_LOGIN, {
@@ -17,7 +17,7 @@ export const authApi = {
 
   /**
    * Register new user
-   * POST /api/v2/auth/register
+   * POST /api/v1/auth/register or /api/v2/... when `BETA=true`
    */
   register: async (registerData: RegisterData): Promise<AuthResponse> => {
     const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH_REGISTER, {
@@ -29,7 +29,7 @@ export const authApi = {
 
   /**
    * Refresh access token
-   * POST /api/v2/auth/refresh
+   * POST /api/v1/auth/refresh or /api/v2/... when `BETA=true`
    */
   refresh: async (refreshToken: string): Promise<AuthResponse> => {
     const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH_REFRESH, {
@@ -40,7 +40,7 @@ export const authApi = {
 
   /**
    * Get Google OAuth URL
-   * GET /api/v2/auth/google/url
+   * GET /api/v1/auth/google/url or /api/v2/... when `BETA=true`
    */
   getGoogleOAuthUrl: async (redirectPort: number = 4280): Promise<{ url: string; state: string }> => {
     const { data } = await api.get<{ url: string; state: string }>(ENDPOINTS.AUTH_GOOGLE_URL, {
@@ -51,7 +51,7 @@ export const authApi = {
 
   /**
    * Exchange Google OAuth code for tokens
-   * POST /api/v2/auth/google/callback
+   * POST /api/v1/auth/google/callback or /api/v2/... when `BETA=true`
    */
   googleCallback: async (code: string, state: string): Promise<AuthResponse> => {
     const { data } = await api.post<AuthResponse>(ENDPOINTS.AUTH_GOOGLE_CALLBACK, {

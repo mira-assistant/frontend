@@ -31,8 +31,9 @@ packages/*/.env.*.local
 apps/*/*.tsbuildinfo
 packages/*/*.tsbuildinfo
 
-# VSCode settings (optional, remove if you want to keep .vscode in repo)
+# IDE settings
 .vscode/
+.cursor/
 
 # OS-specific files
 *.swp
