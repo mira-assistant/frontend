@@ -180,7 +180,7 @@ export async function runPackagedStartupFlow(): Promise<PackagedStartupOutcome> 
   ensureAutoUpdaterRegistered();
 
   pushSplash({
-    title: 'Dadei Assistant — Updater',
+    title: 'dadei — Updater',
     message: 'Checking server and updates…',
     progress: null,
   });

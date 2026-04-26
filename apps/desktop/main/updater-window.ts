@@ -2,7 +2,7 @@ import { BrowserWindow, app, ipcMain, shell } from 'electron';
 import path from 'path';
 import type { UpdaterSplashPayload } from './updater-splash-types';
 
-const GITHUB_RELEASES = 'https://github.com/dadei-assistant/dadei-frontend/releases';
+const GITHUB_RELEASES = 'https://github.com/dadei-app/frontend/releases';
 
 let splashWindow: BrowserWindow | null = null;
 let ipcRegistered = false;
@@ -38,7 +38,7 @@ export async function createUpdaterSplashWindow(): Promise<BrowserWindow> {
     frame: false,
     show: false,
     backgroundColor: '#09090b',
-    title: 'Dadei Assistant — Updater',
+    title: 'dadei — Updater',
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

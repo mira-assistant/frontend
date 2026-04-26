@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dadei Assistant — Updater</title>
+    <title>dadei — Updater</title>
     <style>
       * {
         box-sizing: border-box;
@@ -113,7 +113,7 @@
   </head>
   <body>
     <div class="wrap">
-      <div class="title" id="title">Dadei Assistant</div>
+      <div class="title" id="title">dadei</div>
       <div class="msg" id="msg">Checking for updates…</div>
       <div class="bar-outer" aria-hidden="true">
         <div class="bar-inner indeterminate" id="bar"></div>
@@ -134,7 +134,7 @@
       const hintEl = document.getElementById('hint');
 
       window.updaterAPI.onState((s) => {
-        titleEl.textContent = s.title || 'Dadei Assistant';
+        titleEl.textContent = s.title || 'dadei';
         msgEl.textContent = s.message || '';
         if (s.progress != null && s.progress >= 0) {
           barEl.classList.remove('indeterminate');
