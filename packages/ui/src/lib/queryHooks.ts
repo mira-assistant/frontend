@@ -6,7 +6,6 @@ import { memoriesApi } from '@dadei/ui/lib/api/memories';
 import { personsApi } from '@dadei/ui/lib/api/persons';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
 import { conversationsApi } from '@dadei/ui/lib/api/conversations';
-import { serviceApi } from '@dadei/ui/lib/api/service';
 import { authApi } from '@dadei/ui/lib/api/auth';
 import type { Conversation, Person } from '@dadei/ui/types/models.types';
 import type { UserMe } from '@dadei/ui/types/auth.types';
@@ -205,15 +204,6 @@ export function useConversationByIdQuery(conversationId: string | null | undefin
   return useQuery({
     ...conversationQueryOptions(id),
     enabled: Boolean(conversationId) && enabled,
-  });
-}
-
-export function useServiceClientsQuery(enabled = true) {
-  return useQuery({
-    queryKey: queryKeys.serviceClients,
-    queryFn: () => serviceApi.listClients(),
-    enabled,
-    staleTime: 30_000,
   });
 }
 

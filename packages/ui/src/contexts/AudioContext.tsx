@@ -1,10 +1,11 @@
-
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useMicVAD } from '@ricky0123/vad-react';
 import { interactionsApi } from '@dadei/ui/lib/api/interactions';
+import { useCommand } from '@dadei/ui/contexts/CommandContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@dadei/ui/lib/queryKeys';
+import { transcriptStartsWithWakeCommand } from '@dadei/ui/lib/wakeWordDetection';
 
 interface AudioContextType {
   isProcessing: boolean;
@@ -24,7 +25,6 @@ function calculateRMS(audio: Float32Array): number {
 function hasSignificantAudio(audio: Float32Array): boolean {
   const rms = calculateRMS(audio);
   const minRMS = 0.008;
-  // Loud speech can legitimately exceed 0.3 RMS without being broken audio; rejecting it was dropping good takes.
   const maxRMS = 0.55;
 
   if (rms < minRMS) {
@@ -38,7 +38,6 @@ function hasSignificantAudio(audio: Float32Array): boolean {
   }
 
   const durationSeconds = audio.length / 16000;
-  // Align with VAD minSpeechMs: need enough audio for Whisper + speaker embedding (backend prefers ~0.8s+ when possible).
   const minDuration = 0.42;
   const maxDuration = 10;
 
@@ -54,6 +53,18 @@ function hasSignificantAudio(audio: Float32Array): boolean {
 
   console.log('[VAD] Accepted: RMS=', rms.toFixed(4), 'Duration=', durationSeconds.toFixed(2), 's');
   return true;
+}
+
+/** Short utterances (e.g. "Dadei") for wake-only ASR; still rejects obvious noise/clipping. */
+function hasSignificantAudioForWakeWord(audio: Float32Array): boolean {
+  const rms = calculateRMS(audio);
+  const minRMS = 0.006;
+  const maxRMS = 0.55;
+  if (rms < minRMS || rms > maxRMS) return false;
+  const durationSeconds = audio.length / 16000;
+  const minDuration = 0.28;
+  const maxDuration = 10;
+  return durationSeconds >= minDuration && durationSeconds <= maxDuration;
 }
 
 function encodeWAV(samples: Float32Array, sampleRate: number = 16000): ArrayBuffer {
@@ -90,15 +101,83 @@ function encodeWAV(samples: Float32Array, sampleRate: number = 16000): ArrayBuff
   return buffer;
 }
 
+type TranscribePending = {
+  resolve: (text: string) => void;
+  timeout: ReturnType<typeof setTimeout>;
+};
+
 export function AudioProvider({ children }: { children: React.ReactNode }) {
-  const { clientName, isServiceEnabled, registrationConflict } = useService();
+  const { clientName, isServiceEnabled, registrationConflict, isConnected } = useService();
+  const { mode, submitCommandAudio } = useCommand();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isVADReady, setIsVADReady] = useState(false);
   const speechStartMsRef = useRef<number | null>(null);
+  const wakeWordWorkerRef = useRef<Worker | null>(null);
+  const commandModeRef = useRef(mode);
+  const submitCommandAudioRef = useRef(submitCommandAudio);
+  const transcribeRequestIdRef = useRef(0);
+  const transcribePendingRef = useRef(new Map<number, TranscribePending>());
 
-  // VAD/ONNX assets live in `/public` and must resolve from the app origin,
-  // not the current client route (e.g. `/assistant`).
+  useEffect(() => {
+    commandModeRef.current = mode;
+  }, [mode]);
+
+  useEffect(() => {
+    submitCommandAudioRef.current = submitCommandAudio;
+  }, [submitCommandAudio]);
+
+  const transcribeSegment = useCallback((audio: Float32Array): Promise<string> => {
+    const w = wakeWordWorkerRef.current;
+    if (!w) return Promise.resolve('');
+    const id = ++transcribeRequestIdRef.current;
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        const pending = transcribePendingRef.current.get(id);
+        if (pending) {
+          transcribePendingRef.current.delete(id);
+          console.warn('[Wake] Local ASR timed out (120s)', { requestId: id });
+          pending.resolve('');
+        }
+      }, 120_000);
+      transcribePendingRef.current.set(id, {
+        resolve: (text: string) => {
+          clearTimeout(timeout);
+          transcribePendingRef.current.delete(id);
+          resolve(text);
+        },
+        timeout,
+      });
+      const clone = audio.slice();
+      w.postMessage({ type: 'transcribe', requestId: id, audio: clone }, [clone.buffer]);
+    });
+  }, []);
+
+  useEffect(() => {
+    const worker = new Worker(new URL('../workers/wakeWordWorker.ts', import.meta.url), {
+      type: 'module',
+    });
+    wakeWordWorkerRef.current = worker;
+    worker.onmessage = (e: MessageEvent<{ type?: string; requestId?: number; text?: string }>) => {
+      const { type, requestId, text } = e.data ?? {};
+      if (type !== 'result' || typeof requestId !== 'number') return;
+      const pending = transcribePendingRef.current.get(requestId);
+      if (!pending) return;
+      transcribePendingRef.current.delete(requestId);
+      clearTimeout(pending.timeout);
+      pending.resolve(typeof text === 'string' ? text : '');
+    };
+    return () => {
+      for (const [, p] of transcribePendingRef.current) {
+        clearTimeout(p.timeout);
+        p.resolve('');
+      }
+      transcribePendingRef.current.clear();
+      worker.terminate();
+      wakeWordWorkerRef.current = null;
+    };
+  }, []);
+
   function getAssetPath() {
     return new URL(import.meta.env.BASE_URL, window.location.origin).href;
   }
@@ -107,7 +186,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const vad = useMicVAD({
     startOnLoad: true,
-    // Use the calculated absolute path
     baseAssetPath: assetPath,
     onnxWASMBasePath: assetPath,
 
@@ -115,12 +193,29 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       speechStartMsRef.current = Date.now();
       console.log('[VAD] Speech started at', speechStartMsRef.current);
     },
-    onVADMisfire: () => console.log("VAD misfire"),
+    onVADMisfire: () => console.log('VAD misfire'),
     onSpeechEnd: async (audio: Float32Array) => {
-      if (!hasSignificantAudio(audio)) {
+      const modeNow = commandModeRef.current;
+      const fullQuality = hasSignificantAudio(audio);
+      const wakeScanOk = hasSignificantAudioForWakeWord(audio);
+
+      if (modeNow !== 'passive') {
+        console.log('[VAD] Skipping segment while command pipeline active:', modeNow);
+        return;
+      }
+
+      if (!wakeScanOk && !fullQuality) {
         console.log('[VAD] Audio rejected - quality check failed');
         return;
       }
+
+      console.log('[Wake] Segment', {
+        fullQuality,
+        wakeScanOk,
+        workerReady: !!wakeWordWorkerRef.current,
+        samples: audio.length,
+        approxSec: (audio.length / 16000).toFixed(2),
+      });
 
       setIsProcessing(true);
 
@@ -132,22 +227,50 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         speechStartMsRef.current = null;
 
         const wavBuffer = encodeWAV(audio, 16000);
+
+        if (fullQuality && wakeWordWorkerRef.current) {
+          let localText = '';
+          try {
+            localText = await transcribeSegment(audio);
+          } catch (e) {
+            console.warn('[Wake] Local ASR threw:', e);
+            localText = '';
+          }
+          const preview =
+            localText.length > 120 ? `${localText.slice(0, 120)}…` : localText || '(empty)';
+          const prefixMatch = transcriptStartsWithWakeCommand(localText);
+          console.log('[Wake] Local ASR done', { chars: localText.length, preview, prefixMatch });
+          if (prefixMatch) {
+            console.log('[Wake] Routed to command (Dadei-prefixed transcript)');
+            submitCommandAudioRef.current(wavBuffer);
+            return;
+          }
+        } else if (fullQuality && !wakeWordWorkerRef.current) {
+          console.warn('[Wake] fullQuality but wake worker not ready — cannot run prefix ASR');
+        }
+
+        if (!fullQuality) {
+          console.log(
+            '[Wake] Skipping interaction: segment failed fullQuality (min ~0.42s RMS band). wakeScanOk was',
+            wakeScanOk,
+          );
+          return;
+        }
+
         await interactionsApi.register(wavBuffer, clientName, {
           chunkStartMs,
           chunkEndMs,
         });
         void queryClient.invalidateQueries({ queryKey: queryKeys.interactions });
-        console.log('[VAD] Audio sent successfully');
-        setIsProcessing(false);
+        console.log('[VAD] Audio sent successfully (interaction)');
       } catch (error) {
         console.error('[VAD] Failed to send audio:', error);
+      } finally {
         setIsProcessing(false);
       }
     },
 
     model: 'v5',
-    // Defaults in @ricky0123/vad-web use ~800ms pre-speech pad and ~1400ms redemption — we were far more
-    // aggressive (100ms / 300ms / 0.85), which trims word onsets and tails and hurts Whisper + speaker ID.
     positiveSpeechThreshold: 0.5,
     negativeSpeechThreshold: 0.35,
     redemptionMs: 1000,
@@ -156,7 +279,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     submitUserSpeechOnPause: false,
   });
 
-  // Track when VAD is fully loaded and ready
   useEffect(() => {
     if (!vad.loading && !vad.errored) {
       console.log('[VAD] Ready and initialized');
@@ -164,11 +286,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [vad.loading, vad.errored]);
 
-  // Control VAD listening based on service state (pause if client registration conflict)
   useEffect(() => {
-    if (!isVADReady) return; // Wait for VAD to be ready
+    if (!isVADReady) return;
 
-    const shouldListen = isServiceEnabled && !registrationConflict;
+    const shouldListen = isServiceEnabled && !registrationConflict && isConnected;
 
     if (shouldListen && !vad.listening) {
       console.log('[VAD] Starting listening');
@@ -177,7 +298,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       console.log('[VAD] Pausing listening');
       vad.pause();
     }
-  }, [isServiceEnabled, registrationConflict, vad.listening, isVADReady]);
+  }, [isServiceEnabled, registrationConflict, isConnected, vad.listening, isVADReady]);
 
   useEffect(() => {
     if (vad.loading) {

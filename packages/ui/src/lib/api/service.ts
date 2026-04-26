@@ -2,32 +2,34 @@ import { api } from '@dadei/ui/shared/api/client';
 import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
 import { buildEndpoint, getClientIpAddresses, retryWithBackoff } from './utils';
 
-// Types
 interface ClientRegistration {
-  client_id: string;
+  client_id?: string;
   metadata?: Record<string, unknown>;
 }
 
-interface ClientResponse {
+export interface ClientResponse {
+  client_id: string;
   connected_at: string;
   metadata?: Record<string, unknown>;
 }
 
 export const serviceApi = {
   /**
-   * Register client with network
+   * Register client with network. Omit clientId to let the server assign client1, client2, …
    * POST /api/v1/service/clients
    */
-  async registerClient(clientId: string): Promise<ClientResponse> {
+  async registerClient(clientId?: string): Promise<ClientResponse> {
     const ipAddresses = getClientIpAddresses();
 
     const registration: ClientRegistration = {
-      client_id: clientId,
       metadata: {
         local_ip: ipAddresses.local,
         external_ip: ipAddresses.external,
       },
     };
+    if (clientId) {
+      registration.client_id = clientId;
+    }
 
     const { data } = await api.post<ClientResponse>(ENDPOINTS.SERVICE_CLIENTS, registration);
     return data;
@@ -40,18 +42,6 @@ export const serviceApi = {
   async deregisterClient(clientId: string): Promise<void> {
     const endpoint = buildEndpoint(ENDPOINTS.SERVICE_CLIENT_BY_ID, { clientId });
     await api.delete(endpoint);
-  },
-
-  /**
-   * Rename client
-   * PATCH /api/v1/service/clients/{client_id}/rename
-   */
-  async renameClient(oldClientId: string, newClientId: string): Promise<ClientResponse> {
-    const endpoint = buildEndpoint(ENDPOINTS.SERVICE_CLIENT_RENAME, { clientId: oldClientId });
-    const { data } = await api.patch<ClientResponse>(endpoint, {
-      new_client_id: newClientId,
-    });
-    return data;
   },
 
   /**

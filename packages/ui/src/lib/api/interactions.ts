@@ -2,6 +2,7 @@ import { api } from '@dadei/ui/shared/api/client';
 import { ENDPOINTS, API_CONFIG } from '@dadei/ui/shared/api/constants';
 import { buildEndpoint } from './utils';
 import { Interaction } from '@dadei/ui/types/models.types';
+import { getRealtimeSessionToken } from '@dadei/ui/lib/realtimeClient';
 
 interface GetInteractionsParams {
   limit?: number;
@@ -102,6 +103,10 @@ export const interactionsApi = {
     const blob = new Blob([audioData], { type: 'audio/wav' });
     formData.append('audio', blob, 'audio.wav');
     formData.append('client_id', clientId);
+    const sessionToken = getRealtimeSessionToken();
+    if (sessionToken) {
+      formData.append('session_token', sessionToken);
+    }
     if (timing?.chunkStartMs != null) {
       formData.append('chunk_start_ms', String(timing.chunkStartMs));
     }

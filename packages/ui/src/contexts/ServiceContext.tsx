@@ -5,60 +5,36 @@ import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
 import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
-import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
-import { useQueryClient } from '@tanstack/react-query';
 import { clearAssistantSessionCaches } from '@dadei/ui/lib/queryHooks';
-import { queryKeys } from '@dadei/ui/lib/queryKeys';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
   isConnected: boolean;
-  /** True when POST /service/clients returned 409 (client id already registered). */
+  /** True when device registration with the service failed after sign-in. */
   registrationConflict: boolean;
+  /** Server-assigned or persisted device client id (opaque string). */
   clientName: string;
   toggleService: () => Promise<void>;
-  setClientName: (name: string) => void;
   isTogglingService: boolean;
 }
 
 export const ServiceContext = createContext<ServiceContextType | undefined>(undefined);
 
 const ENABLE_TIMEOUT_MS = 5000;
-const DEFAULT_CLIENT_PREFIX = 'client';
-const AUTO_NAME_PATTERN = /^client\d+$/;
-const FALLBACK_DEFAULT_CLIENT_NAME = `${DEFAULT_CLIENT_PREFIX}1`;
-const MAX_AUTO_NAME_REGISTER_ATTEMPTS = 5;
 
-function pickFirstAvailableClientName(existing: string[]): string {
-  const used = new Set<number>();
-  for (const name of existing) {
-    const match = AUTO_NAME_PATTERN.exec(name);
-    if (!match) continue;
-    const value = Number(name.slice(DEFAULT_CLIENT_PREFIX.length));
-    if (Number.isInteger(value) && value > 0) {
-      used.add(value);
-    }
-  }
-
-  for (let i = 1; i < 10_000; i += 1) {
-    if (!used.has(i)) {
-      return `${DEFAULT_CLIENT_PREFIX}${i}`;
-    }
-  }
-
-  return `${DEFAULT_CLIENT_PREFIX}${Date.now()}`;
-}
-
-async function resolveAutoClientName(): Promise<string> {
-  const existing = await serviceApi.listClients();
-  return pickFirstAvailableClientName(existing);
-}
-
-function readInitialClientName(): string {
+function readInitialClientId(): string {
   if (typeof window === 'undefined' || window.electronAPI) {
-    return FALLBACK_DEFAULT_CLIENT_NAME;
+    return '';
   }
-  return getStoredClientName() || FALLBACK_DEFAULT_CLIENT_NAME;
+  return getStoredClientName() || '';
+}
+
+function generateClientId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `client-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  return `client-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
@@ -70,36 +46,16 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
 
   const [isServiceEnabled, setIsServiceEnabled] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [clientName, setClientName] = useState(readInitialClientName);
-  /** False until persisted identity has been applied (see mount effect). */
+  const [clientName, setClientName] = useState(readInitialClientId);
+  /** False until persisted identity has been applied (Electron IPC); web resolves on microtask. */
   const [isClientIdentityReady, setIsClientIdentityReady] = useState(false);
   const [isTogglingService, setIsTogglingService] = useState(false);
   const [registrationConflict, setRegistrationConflict] = useState(false);
-  const shouldResolveAutoClientNameRef = useRef(
-    Boolean(
-      typeof window !== 'undefined' &&
-      !window.electronAPI &&
-      !getStoredClientName()
-    )
-  );
 
   const enableTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isRegisteredRef = useRef(false);
-  /** Latest client id for stale checks after async register. */
   const clientNameRef = useRef(clientName);
   clientNameRef.current = clientName;
-  /** Used for unload/DELETE so deregister effect does not depend on `clientName` (rename must not trigger cleanup deregister). */
-  const clientNameForLifecycleRef = useRef(clientName);
-  clientNameForLifecycleRef.current = clientName;
-  const prevClientNameForRealtimeRef = useRef<string | null>(null);
 
-  /**
-   * Resolve persisted identity before any registration.
-   * Starts false for all platforms so the register effect never runs in the same passive flush
-   * as the first paint (avoids ordering races with other state).
-   * Web: name is already in state from readInitialClientName; readiness is deferred one microtask.
-   * Electron: wait for IPC, then optionally replace default clientName.
-   */
   useEffect(() => {
     let cancelled = false;
 
@@ -109,16 +65,11 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
         .then((result) => {
           if (cancelled) return;
           if (result.success && result.clientName) {
-            shouldResolveAutoClientNameRef.current = false;
             setClientName(result.clientName);
-            return;
           }
-          shouldResolveAutoClientNameRef.current = true;
-          setClientName(FALLBACK_DEFAULT_CLIENT_NAME);
         })
         .catch(() => {
-          shouldResolveAutoClientNameRef.current = true;
-          setClientName(FALLBACK_DEFAULT_CLIENT_NAME);
+          /* keep empty — server will assign */
         })
         .finally(() => {
           if (!cancelled) setIsClientIdentityReady(true);
@@ -137,229 +88,60 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) {
       stopRealtimeClient();
+      setIsConnected(false);
       setRegistrationConflict(false);
       clearAssistantSessionCaches(queryClient);
     }
   }, [isAuthenticated, queryClient]);
 
   useEffect(() => {
-    setRegistrationConflict(false);
-  }, [clientName]);
-
-  useEffect(() => {
     if (isAuthLoading) return;
     if (!isAuthenticated) {
       setIsConnected(false);
-      isRegisteredRef.current = false;
       return;
     }
 
-    let registerCancelled = false;
+    let cancelled = false;
 
-    const registerClient = async () => {
+    const connectRealtime = async () => {
       if (!isClientIdentityReady) return;
-      if (!clientName) return;
-      if (isRegisteredRef.current) return;
+      const persisted = clientNameRef.current.trim();
+      const effectiveClientId = persisted || generateClientId();
 
-      const requestedNameAtStart = clientName;
-      let idAtStart = requestedNameAtStart;
-      const allowAutoRetry =
-        shouldResolveAutoClientNameRef.current && AUTO_NAME_PATTERN.test(requestedNameAtStart);
-
-      for (let attempt = 0; attempt < MAX_AUTO_NAME_REGISTER_ATTEMPTS; attempt += 1) {
-        if (registerCancelled || clientNameRef.current !== requestedNameAtStart) {
-          return;
-        }
-
-        if (allowAutoRetry) {
-          try {
-            idAtStart = await resolveAutoClientName();
-          } catch {
-            idAtStart = attempt === 0 ? requestedNameAtStart : idAtStart;
-          }
-        }
-
-        try {
-          await serviceApi.registerClient(idAtStart);
-
-          if (registerCancelled) {
-            try {
-              await serviceApi.deregisterClient(idAtStart);
-            } catch {
-              /* best-effort undo of orphan registration */
-            }
-            return;
-          }
-
-          if (clientNameRef.current !== requestedNameAtStart) {
-            try {
-              await serviceApi.deregisterClient(idAtStart);
-            } catch {
-              /* best-effort */
-            }
-            return;
-          }
-
-          setRegistrationConflict(false);
-          if (window.electronAPI) {
-            await window.electronAPI.storeClientName(idAtStart);
-          } else {
-            setStoredClientName(idAtStart);
-          }
-
-          if (registerCancelled || clientNameRef.current !== requestedNameAtStart) {
-            try {
-              await serviceApi.deregisterClient(idAtStart);
-            } catch {
-              /* best-effort */
-            }
-            return;
-          }
-
-          if (requestedNameAtStart !== idAtStart) {
-            setClientName(idAtStart);
-            showToast(`Client name "${requestedNameAtStart}" was taken. Switched to "${idAtStart}".`, 'error');
-          }
-
-          setIsConnected(true);
-          isRegisteredRef.current = true;
-          shouldResolveAutoClientNameRef.current = false;
-          void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
-          console.log(`Client ${idAtStart} registered`);
-
-          startRealtimeClient({
-            getAccessToken: () => getAccessTokenRef.current(),
-            clientId: idAtStart,
-          });
-          return;
-        } catch (error: any) {
-          const status = error?.response?.status;
-          if (status === 409 && allowAutoRetry) {
-            continue;
-          }
-
-          console.error('Failed to register client:', error);
-          if (status === 409) {
-            setRegistrationConflict(true);
-            showToast(
-              `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
-              'error'
-            );
-          }
-          setIsConnected(false);
-          isRegisteredRef.current = false;
-          stopRealtimeClient();
-          return;
-        }
-      }
-
-      if (allowAutoRetry) {
-        setRegistrationConflict(true);
-        setIsConnected(false);
-        isRegisteredRef.current = false;
-        stopRealtimeClient();
-        showToast(
-          `Could not claim an automatic client name after ${MAX_AUTO_NAME_REGISTER_ATTEMPTS} attempts. Try again.`,
-          'error'
-        );
-      } else {
-        setRegistrationConflict(true);
-        setIsConnected(false);
-        isRegisteredRef.current = false;
-        stopRealtimeClient();
-        showToast(
-          `Client name "${idAtStart}" is already in use for your account (another tab, device, or stale session). Choose a different name in settings or disconnect the other client.`,
-          'error'
-        );
-      }
-    };
-
-    void registerClient();
-
-    return () => {
-      registerCancelled = true;
-    };
-  }, [clientName, isAuthenticated, isAuthLoading, isClientIdentityReady, queryClient, showToast]);
-
-  /**
-   * PATCH rename already moves registration server-side. Do not re-POST /clients for the new id.
-   * When `clientName` changes while this session is still registered, only reconnect the WebSocket.
-   */
-  useEffect(() => {
-    if (!isAuthenticated || !isConnected || !isRegisteredRef.current) {
-      prevClientNameForRealtimeRef.current = clientName;
-      return;
-    }
-
-    const prev = prevClientNameForRealtimeRef.current;
-    prevClientNameForRealtimeRef.current = clientName;
-
-    if (prev === null || prev === clientName) {
-      return;
-    }
-
-    stopRealtimeClient();
-    startRealtimeClient({
-      getAccessToken: () => getAccessTokenRef.current(),
-      clientId: clientName,
-    });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
-  }, [clientName, isAuthenticated, isConnected, queryClient]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !isConnected) return;
-
-    const sendCloseDeregister = () => {
-      if (!isRegisteredRef.current) return;
-
-      if (window.electronAPI) {
-        window.electronAPI.deregisterClient();
-        return;
-      }
-
-      const accessToken = webTokenStore.get()?.accessToken;
-      if (!accessToken) return;
-      const baseUrl = process.env.API_URL || 'http://localhost:8000';
-      const prefix = process.env.BETA === 'true' ? '/api/v2' : '/api/v1';
-      const id = clientNameForLifecycleRef.current;
-      const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(id)}`;
-      void fetch(endpoint, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        keepalive: true,
-      }).catch(() => {
-        /* best-effort cleanup only */
-      });
-    };
-
-    const deregisterClient = async () => {
-      if (!isRegisteredRef.current) return;
-
-      const id = clientNameForLifecycleRef.current;
       try {
-        console.log(`Deregistering client ${id}...`);
+        if (cancelled) {
+          return;
+        }
+        setRegistrationConflict(false);
+        if (window.electronAPI) {
+          await window.electronAPI.storeClientName(effectiveClientId);
+        } else {
+          setStoredClientName(effectiveClientId);
+        }
+        setClientName(effectiveClientId);
+
+        startRealtimeClient({
+          getAccessToken: () => getAccessTokenRef.current(),
+          clientId: effectiveClientId,
+        });
+      } catch (error: unknown) {
+        console.error('Failed to start realtime client:', error);
+        setRegistrationConflict(true);
+        showToast(
+          'Could not start realtime connectivity. Try signing out and back in, or try again in a moment.',
+          'error'
+        );
+        setIsConnected(false);
         stopRealtimeClient();
-        await serviceApi.deregisterClient(id);
-        isRegisteredRef.current = false;
-        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
-        console.log(`Client ${id} deregistered`);
-      } catch (error) {
-        console.error('Failed to deregister client:', error);
       }
     };
 
-    const handleBeforeUnload = () => sendCloseDeregister();
-    const handlePageHide = () => sendCloseDeregister();
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
+    void connectRealtime();
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      deregisterClient();
+      cancelled = true;
     };
-  }, [isAuthenticated, isConnected, queryClient]);
+  }, [isAuthenticated, isAuthLoading, isClientIdentityReady, showToast]);
 
   useEffect(() => {
     const handleServiceStatusChanged = (status: { enabled: boolean }) => {
@@ -375,6 +157,26 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     };
 
     const offWs = subscribeRealtimeMessages(msg => {
+      if (msg.event === 'realtime_status') {
+        if (typeof msg.connected === 'boolean') {
+          setIsConnected(msg.connected);
+        }
+        return;
+      }
+      if (msg.event === 'session_ready') {
+        const serverClientId = typeof msg.client_id === 'string' ? msg.client_id : null;
+        if (serverClientId) {
+          setClientName(serverClientId);
+          if (window.electronAPI) {
+            void window.electronAPI.storeClientName(serverClientId);
+          } else {
+            setStoredClientName(serverClientId);
+          }
+        }
+        setIsConnected(true);
+        setRegistrationConflict(false);
+        return;
+      }
       if (msg.event !== 'service_status') return;
       if (typeof msg.enabled !== 'boolean') return;
       handleServiceStatusChanged({ enabled: msg.enabled });
@@ -394,7 +196,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const toggleService = useCallback(async () => {
     if (registrationConflict) {
       showToast(
-        'This session is not registered as a client. Change the client name to resolve the conflict.',
+        'This session is not registered with the assistant service. Try signing out and back in.',
         'error'
       );
       return;
@@ -429,7 +231,6 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
         registrationConflict,
         clientName,
         toggleService,
-        setClientName,
         isTogglingService,
       }}
     >

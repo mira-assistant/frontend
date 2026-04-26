@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
@@ -51,13 +50,13 @@ export default function MicrophoneButton({ disableSpaceToggle = false }: Microph
         }
         whileTap={!micBlocked ? { scale: 0.95, transition: { duration: 0.1 } } : {}}
         className={cn(
-          'relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] border-white/15 transition-[background-image,box-shadow,opacity,border-color] duration-300',
+          'relative flex h-40 w-40 items-center justify-center rounded-full border-[3px] transition-[background-image,box-shadow,opacity,border-color] duration-300',
           'focus:outline-none focus:ring-4 focus:ring-emerald-500/25',
           micBlocked
-            ? 'cursor-not-allowed bg-zinc-700 opacity-60'
+            ? 'cursor-not-allowed border-white/15 bg-zinc-700 opacity-60'
             : isServiceEnabled
-              ? 'cursor-pointer bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(225,29,72,0.5),0_0_64px_rgba(225,29,72,0.22)]'
-              : 'cursor-pointer bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_0_28px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]'
+              ? 'cursor-pointer border-white/15 bg-linear-to-br from-rose-500 to-rose-700 shadow-[0_0_32px_rgba(225,29,72,0.5),0_0_64px_rgba(225,29,72,0.22)]'
+              : 'cursor-pointer border-white/15 bg-linear-to-br from-emerald-500 to-emerald-700 shadow-[0_0_28px_rgba(16,185,129,0.4)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]'
         )}
       >
         {/* Red Ripple Waves - when service enabled */}

@@ -4,6 +4,13 @@
   "productName": "Dadei Assistant",
   "copyright": "Copyright © 2026 Ankur Desai",
   "artifactName": "Dadei-Assistant-${version}-${os}-${arch}.${ext}",
+  "afterSign": "scripts/notarize.cjs",
+  "extraResources": [
+    {
+      "from": "resources/updater.html",
+      "to": "."
+    }
+  ],
   "files": [
     "dist/**/*",
     "renderer/dist/**/*",
@@ -29,7 +36,11 @@
   },
   "mac": {
     "target": ["dmg", "zip"],
-    "icon": "resources/icon.png"
+    "icon": "resources/icon.png",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "resources/entitlements.mac.plist",
+    "entitlementsInherit": "resources/entitlements.mac.inherit.plist"
   },
   "linux": {
     "target": ["AppImage"],

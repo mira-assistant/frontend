@@ -1,9 +1,12 @@
 import { useLayoutEffect, useState, type CSSProperties } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@dadei/ui/contexts/AuthContext';
+import { useCommand, type CommandMode } from '@dadei/ui/contexts/CommandContext';
 import { useService } from '@dadei/ui/contexts/ServiceContext';
 import { NotificationBannerSlot } from '@dadei/ui/contexts/NotificationContext';
 import ActionWebhookBanners from '@dadei/ui/components/ui/ActionWebhookBanners';
+import CommandBubble from '@dadei/ui/components/ui/CommandBubble';
 import NetworkMemoryRealtimeSync from '@dadei/ui/components/ui/NetworkMemoryRealtimeSync';
 import Header from '@dadei/ui/components/Header';
 import MicrophoneButton from '@dadei/ui/components/MicrophoneButton';
@@ -21,6 +24,7 @@ import { Mic } from 'lucide-react';
 export default function AssistantLayout() {
   const { isAuthenticated, isLoading } = useAuth();
   const { isConnected } = useService();
+  const { mode, transcript, responseTokens, activeToolCall, dismiss } = useCommand();
   const [isPeoplePanelOpen, setIsPeoplePanelOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const location = useLocation();
@@ -116,7 +120,19 @@ export default function AssistantLayout() {
             }}
           >
             <NotificationBannerSlot />
-            <div className="flex min-h-0 flex-1 items-center justify-center">
+            <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-6">
+              <AnimatePresence>
+                {mode !== 'passive' ? (
+                  <CommandBubble
+                    key="command-bubble"
+                    mode={mode as Exclude<CommandMode, 'passive'>}
+                    transcript={transcript}
+                    responseTokens={responseTokens}
+                    activeToolCall={activeToolCall}
+                    onDismiss={dismiss}
+                  />
+                ) : null}
+              </AnimatePresence>
               <MicrophoneButton disableSpaceToggle={isPeoplePanelOpen} />
             </div>
           </div>

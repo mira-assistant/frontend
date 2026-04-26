@@ -1,13 +1,8 @@
 import './env';
-import { app, BrowserWindow, ipcMain, Menu, type WebContents } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, Menu, type WebContents } from 'electron';
 import path from 'path';
-import {
-  assertBackendMajorCompatible,
-  configureSilentAutoUpdates,
-  isUpdateInstallInProgress,
-} from './updater';
-import { api } from '../shared/api/client';
-import { ENDPOINTS } from '../shared/api/constants';
+import { closeUpdaterSplashWindow, createUpdaterSplashWindow } from './updater-window';
+import { getBackendVersionGate, isUpdateInstallInProgress, runPackagedStartupFlow } from './updater';
 import { TokenStorage } from './auth/token-storage';
 import { handleGoogleOAuth } from './auth/oauth-handler';
 
@@ -18,7 +13,6 @@ const RENDERER_DEV_PORT = process.env.RENDERER_DEV_PORT || '59247';
 const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 
 let mainWindow: BrowserWindow | null = null;
-let currentClientName: string | null = null;
 
 const isDarwin = process.platform === 'darwin';
 
@@ -64,27 +58,6 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-}
-
-async function deregisterClient(): Promise<void> {
-  if (!currentClientName) {
-    console.log('No client to deregister');
-    return;
-  }
-
-  try {
-    const accessToken = await TokenStorage.getAccessToken();
-    if (!accessToken) return;
-
-    console.log(`Deregistering client: ${currentClientName}`);
-
-    await api.delete(ENDPOINTS.SERVICE_CLIENTS + `/${encodeURIComponent(currentClientName)}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      timeout: 5000,
-    });
-  } catch (error: any) {
-    console.error('Failed to deregister client:', error.message);
-  }
 }
 
 ipcMain.handle('auth:store-tokens', async (_, accessToken: string, refreshToken: string) => {
@@ -140,7 +113,6 @@ ipcMain.handle('auth:google-oauth', async () => {
 ipcMain.handle('client:store-name', async (_, clientName: string) => {
   try {
     await TokenStorage.storeClientName(clientName);
-    currentClientName = clientName;
     console.log(`[IPC] Client name stored: ${clientName}`);
     return { success: true };
   } catch (error: any) {
@@ -152,18 +124,11 @@ ipcMain.handle('client:store-name', async (_, clientName: string) => {
 ipcMain.handle('client:get-name', async () => {
   try {
     const clientName = await TokenStorage.getClientName();
-    if (clientName) {
-      currentClientName = clientName;
-    }
     return { success: true, clientName };
   } catch (error: any) {
     console.error('[IPC] Error getting client name:', error);
     return { success: false, error: error.message };
   }
-});
-
-ipcMain.handle('client:deregister', async () => {
-  await deregisterClient();
 });
 
 ipcMain.handle('window:minimize', (event) => {
@@ -192,20 +157,40 @@ ipcMain.handle('window:is-maximized', (event) => {
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
 
-  const backendOk = await assertBackendMajorCompatible();
-  if (!backendOk) {
-    app.quit();
-    return;
-  }
-
-  configureSilentAutoUpdates();
-  createWindow();
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
+
+  if (!app.isPackaged) {
+    const gate = await getBackendVersionGate();
+    if (gate.mandatoryMismatch) {
+      dialog.showErrorBox(
+        'Update required',
+        `This build (v${app.getVersion()}) is not compatible with the server (${gate.serverVersion ?? 'unknown'}). Align the desktop version with the server major version.`,
+      );
+      app.quit();
+      return;
+    }
+    createWindow();
+    return;
+  }
+
+  await createUpdaterSplashWindow();
+  const outcome = await runPackagedStartupFlow();
+
+  if (outcome === 'launch_main') {
+    closeUpdaterSplashWindow();
+    createWindow();
+    return;
+  }
+
+  if (outcome === 'quit_for_install') {
+    return;
+  }
+
+  // quit_manual: splash stays open with Open releases / Quit until the user exits.
 });
 
 app.on('window-all-closed', () => {
@@ -227,8 +212,6 @@ app.on('before-quit', async (event) => {
   }, 4000);
 
   try {
-    await deregisterClient();
-
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('app-closing');
     }
