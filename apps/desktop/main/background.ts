@@ -3,8 +3,6 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, type WebContents } from 'ele
 import path from 'path';
 import { closeUpdaterSplashWindow, createUpdaterSplashWindow } from './updater-window';
 import { getBackendVersionGate, isUpdateInstallInProgress, runPackagedStartupFlow } from './updater';
-import { api } from '../shared/api/client';
-import { ENDPOINTS } from '../shared/api/constants';
 import { TokenStorage } from './auth/token-storage';
 import { handleGoogleOAuth } from './auth/oauth-handler';
 
@@ -15,7 +13,6 @@ const RENDERER_DEV_PORT = process.env.RENDERER_DEV_PORT || '59247';
 const RENDERER_DEV_URL = `http://localhost:${RENDERER_DEV_PORT}`;
 
 let mainWindow: BrowserWindow | null = null;
-let currentClientName: string | null = null;
 
 const isDarwin = process.platform === 'darwin';
 
@@ -61,27 +58,6 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
-}
-
-async function deregisterClient(): Promise<void> {
-  if (!currentClientName) {
-    console.log('No client to deregister');
-    return;
-  }
-
-  try {
-    const accessToken = await TokenStorage.getAccessToken();
-    if (!accessToken) return;
-
-    console.log(`Deregistering client: ${currentClientName}`);
-
-    await api.delete(ENDPOINTS.SERVICE_CLIENTS + `/${encodeURIComponent(currentClientName)}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      timeout: 5000,
-    });
-  } catch (error: any) {
-    console.error('Failed to deregister client:', error.message);
-  }
 }
 
 ipcMain.handle('auth:store-tokens', async (_, accessToken: string, refreshToken: string) => {
@@ -137,7 +113,6 @@ ipcMain.handle('auth:google-oauth', async () => {
 ipcMain.handle('client:store-name', async (_, clientName: string) => {
   try {
     await TokenStorage.storeClientName(clientName);
-    currentClientName = clientName;
     console.log(`[IPC] Client name stored: ${clientName}`);
     return { success: true };
   } catch (error: any) {
@@ -149,18 +124,11 @@ ipcMain.handle('client:store-name', async (_, clientName: string) => {
 ipcMain.handle('client:get-name', async () => {
   try {
     const clientName = await TokenStorage.getClientName();
-    if (clientName) {
-      currentClientName = clientName;
-    }
     return { success: true, clientName };
   } catch (error: any) {
     console.error('[IPC] Error getting client name:', error);
     return { success: false, error: error.message };
   }
-});
-
-ipcMain.handle('client:deregister', async () => {
-  await deregisterClient();
 });
 
 ipcMain.handle('window:minimize', (event) => {
@@ -244,8 +212,6 @@ app.on('before-quit', async (event) => {
   }, 4000);
 
   try {
-    await deregisterClient();
-
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('app-closing');
     }

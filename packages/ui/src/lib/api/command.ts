@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@dadei/ui/shared/api/client';
 import { ENDPOINTS } from '@dadei/ui/shared/api/constants';
+import { getRealtimeSessionToken } from '@dadei/ui/lib/realtimeClient';
 
 export type CommandSSEEvent =
   | { type: 'transcript'; text: string }
@@ -30,6 +31,10 @@ export async function* streamCommand(
   const form = new FormData();
   form.append('audio', new Blob([wavBuffer], { type: 'audio/wav' }), 'audio.wav');
   form.append('client_id', clientId);
+  const sessionToken = getRealtimeSessionToken();
+  if (sessionToken) {
+    form.append('session_token', sessionToken);
+  }
 
   let response: Response;
   try {

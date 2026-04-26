@@ -5,10 +5,8 @@ import { useNotifications } from '@dadei/ui/contexts/NotificationContext';
 import { serviceApi } from '@dadei/ui/lib/api/service';
 import { getStoredClientName, setStoredClientName } from '@dadei/ui/lib/clientNameStorage';
 import { startRealtimeClient, stopRealtimeClient, subscribeRealtimeMessages } from '@dadei/ui/lib/realtimeClient';
-import { webTokenStore } from '@dadei/ui/lib/webTokenStore';
-import { useQueryClient } from '@tanstack/react-query';
 import { clearAssistantSessionCaches } from '@dadei/ui/lib/queryHooks';
-import { queryKeys } from '@dadei/ui/lib/queryKeys';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ServiceContextType {
   isServiceEnabled: boolean;
@@ -32,6 +30,13 @@ function readInitialClientId(): string {
   return getStoredClientName() || '';
 }
 
+function generateClientId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `client-${crypto.randomUUID().slice(0, 8)}`;
+  }
+  return `client-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading: isAuthLoading, getAccessToken } = useAuth();
   const { showToast } = useNotifications();
@@ -48,11 +53,8 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   const [registrationConflict, setRegistrationConflict] = useState(false);
 
   const enableTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isRegisteredRef = useRef(false);
   const clientNameRef = useRef(clientName);
   clientNameRef.current = clientName;
-  const clientNameForLifecycleRef = useRef(clientName);
-  clientNameForLifecycleRef.current = clientName;
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +88,7 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isAuthenticated) {
       stopRealtimeClient();
+      setIsConnected(false);
       setRegistrationConflict(false);
       clearAssistantSessionCaches(queryClient);
     }
@@ -95,132 +98,50 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     if (isAuthLoading) return;
     if (!isAuthenticated) {
       setIsConnected(false);
-      isRegisteredRef.current = false;
       return;
     }
 
-    let registerCancelled = false;
+    let cancelled = false;
 
-    const registerClient = async () => {
+    const connectRealtime = async () => {
       if (!isClientIdentityReady) return;
-      if (isRegisteredRef.current) return;
-
-      const persisted = clientNameRef.current.trim() || undefined;
+      const persisted = clientNameRef.current.trim();
+      const effectiveClientId = persisted || generateClientId();
 
       try {
-        const response = await serviceApi.registerClient(persisted);
-
-        if (registerCancelled) {
-          try {
-            await serviceApi.deregisterClient(response.client_id);
-          } catch {
-            /* best-effort undo */
-          }
+        if (cancelled) {
           return;
         }
-
-        const id = response.client_id;
-
         setRegistrationConflict(false);
         if (window.electronAPI) {
-          await window.electronAPI.storeClientName(id);
+          await window.electronAPI.storeClientName(effectiveClientId);
         } else {
-          setStoredClientName(id);
+          setStoredClientName(effectiveClientId);
         }
-
-        if (registerCancelled) {
-          try {
-            await serviceApi.deregisterClient(id);
-          } catch {
-            /* best-effort */
-          }
-          return;
-        }
-
-        setClientName(id);
-        setIsConnected(true);
-        isRegisteredRef.current = true;
-        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
-        console.log(`Client ${id} registered`);
+        setClientName(effectiveClientId);
 
         startRealtimeClient({
           getAccessToken: () => getAccessTokenRef.current(),
-          clientId: id,
+          clientId: effectiveClientId,
         });
       } catch (error: unknown) {
-        console.error('Failed to register client:', error);
+        console.error('Failed to start realtime client:', error);
         setRegistrationConflict(true);
         showToast(
-          'Could not register this device with the assistant service. Try signing out and back in, or try again in a moment.',
+          'Could not start realtime connectivity. Try signing out and back in, or try again in a moment.',
           'error'
         );
         setIsConnected(false);
-        isRegisteredRef.current = false;
         stopRealtimeClient();
       }
     };
 
-    void registerClient();
+    void connectRealtime();
 
     return () => {
-      registerCancelled = true;
+      cancelled = true;
     };
-  }, [isAuthenticated, isAuthLoading, isClientIdentityReady, queryClient, showToast]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !isConnected) return;
-
-    const sendCloseDeregister = () => {
-      if (!isRegisteredRef.current) return;
-
-      if (window.electronAPI) {
-        window.electronAPI.deregisterClient();
-        return;
-      }
-
-      const accessToken = webTokenStore.get()?.accessToken;
-      if (!accessToken) return;
-      const baseUrl = process.env.API_URL || 'http://localhost:8000';
-      const prefix = process.env.BETA === 'true' ? '/api/v2' : '/api/v1';
-      const id = clientNameForLifecycleRef.current;
-      const endpoint = `${baseUrl.replace(/\/$/, '')}${prefix}/service/clients/${encodeURIComponent(id)}`;
-      void fetch(endpoint, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        keepalive: true,
-      }).catch(() => {
-        /* best-effort cleanup only */
-      });
-    };
-
-    const deregisterClient = async () => {
-      if (!isRegisteredRef.current) return;
-
-      const id = clientNameForLifecycleRef.current;
-      try {
-        console.log(`Deregistering client ${id}...`);
-        stopRealtimeClient();
-        await serviceApi.deregisterClient(id);
-        isRegisteredRef.current = false;
-        void queryClient.invalidateQueries({ queryKey: queryKeys.serviceClients });
-        console.log(`Client ${id} deregistered`);
-      } catch (error) {
-        console.error('Failed to deregister client:', error);
-      }
-    };
-
-    const handleBeforeUnload = () => sendCloseDeregister();
-    const handlePageHide = () => sendCloseDeregister();
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      deregisterClient();
-    };
-  }, [isAuthenticated, isConnected, queryClient]);
+  }, [isAuthenticated, isAuthLoading, isClientIdentityReady, showToast]);
 
   useEffect(() => {
     const handleServiceStatusChanged = (status: { enabled: boolean }) => {
@@ -236,6 +157,26 @@ export function ServiceProvider({ children }: { children: React.ReactNode }) {
     };
 
     const offWs = subscribeRealtimeMessages(msg => {
+      if (msg.event === 'realtime_status') {
+        if (typeof msg.connected === 'boolean') {
+          setIsConnected(msg.connected);
+        }
+        return;
+      }
+      if (msg.event === 'session_ready') {
+        const serverClientId = typeof msg.client_id === 'string' ? msg.client_id : null;
+        if (serverClientId) {
+          setClientName(serverClientId);
+          if (window.electronAPI) {
+            void window.electronAPI.storeClientName(serverClientId);
+          } else {
+            setStoredClientName(serverClientId);
+          }
+        }
+        setIsConnected(true);
+        setRegistrationConflict(false);
+        return;
+      }
       if (msg.event !== 'service_status') return;
       if (typeof msg.enabled !== 'boolean') return;
       handleServiceStatusChanged({ enabled: msg.enabled });

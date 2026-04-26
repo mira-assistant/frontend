@@ -33,7 +33,6 @@ export interface ElectronAPI {
   loginWithGoogle: () => Promise<{ success: boolean; data?: { code: string; state: string }; error?: string }>;
   storeClientName: (clientName: string) => Promise<{ success: boolean; error?: string }>;
   getClientName: () => Promise<{ success: boolean; clientName?: string; error?: string }>;
-  deregisterClient: () => VoidFunction;
 }
 
 declare global {

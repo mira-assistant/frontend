@@ -24,7 +24,6 @@ export const ENDPOINTS = {
   // Service
   SERVICE_CLIENTS: '/service/clients',
   SERVICE_CLIENT_BY_ID: '/service/clients/:clientId',
-  SERVICE_CLIENT_RENAME: '/service/clients/:clientId/rename',
   SERVICE_NETWORK_ENABLE: '/service/network/enable',
   SERVICE_NETWORK_DISABLE: '/service/network/disable',
 
