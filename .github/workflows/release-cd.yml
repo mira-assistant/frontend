@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '22'
           cache: npm
@@ -86,6 +86,8 @@ jobs:
           if [ -z "${CSC_LINK:-}" ]; then
             echo "No CSC_LINK: using ad-hoc signing (Gatekeeper / auto-update may block until Developer ID secrets are set)."
             export CSC_IDENTITY_AUTO='-'
+            # electron-builder treats CSC_LINK="" (from empty secrets.*) as a path; path.resolve(cwd, "") is cwd → "not a file".
+            unset CSC_LINK
           fi
           npm run package
 
