@@ -24,8 +24,8 @@
   "asar": true,
   "publish": {
     "provider": "github",
-    "owner": "dadei-assistant",
-    "repo": "dadei-frontend"
+    "owner": "dadei-app",
+    "repo": "frontend"
   },
   "win": {
     "target": "nsis",
